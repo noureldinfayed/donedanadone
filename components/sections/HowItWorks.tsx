@@ -1,0 +1,81 @@
+'use client'
+
+import { motion } from 'framer-motion'
+
+const STEPS = [
+  {
+    icon: '📱',
+    title: 'Scan the QR code',
+    desc: 'Open WhatsApp instantly. No app download needed.',
+  },
+  {
+    icon: '🤖',
+    title: 'Chat with our AI',
+    desc: 'Tell us what you need. Our AI books it in seconds.',
+  },
+  {
+    icon: '✅',
+    title: 'Professional arrives',
+    desc: 'Sit back. A verified professional is on the way.',
+  },
+]
+
+export default function HowItWorks() {
+  return (
+    <section
+      id="how"
+      className="relative border-y border-white/5 bg-ink-soft/40 px-5 py-24 sm:px-8 sm:py-32"
+    >
+      <div className="mx-auto max-w-6xl">
+        <motion.header
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto mb-16 max-w-2xl text-center"
+        >
+          <p className="mb-3 text-xs font-medium uppercase tracking-widest text-saffron">
+            How it works
+          </p>
+          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">
+            As easy as sending a message.
+          </h2>
+        </motion.header>
+
+        <div className="relative grid gap-10 md:grid-cols-3 md:gap-6">
+          {/* Dashed connector — desktop only */}
+          <div
+            aria-hidden
+            className="absolute top-12 left-1/6 right-1/6 hidden h-px md:block"
+            style={{
+              backgroundImage:
+                'linear-gradient(to right, rgba(244,160,39,0.4) 50%, transparent 0%)',
+              backgroundSize: '12px 1px',
+              backgroundRepeat: 'repeat-x',
+            }}
+          />
+
+          {STEPS.map((s, i) => (
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: i * 0.12 }}
+              className="relative flex flex-col items-center text-center"
+            >
+              <div className="relative mb-5 flex size-20 items-center justify-center rounded-2xl border border-saffron/30 bg-ink text-4xl shadow-lg shadow-black/40">
+                {s.icon}
+                <span className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full bg-saffron text-xs font-bold text-ink">
+                  {i + 1}
+                </span>
+              </div>
+              <h3 className="font-display text-xl font-semibold text-white">{s.title}</h3>
+              <p className="mt-2 max-w-xs text-sm text-muted">{s.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
