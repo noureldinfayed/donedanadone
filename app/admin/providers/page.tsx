@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { supabaseAdmin, type Provider } from '@/lib/supabase'
+import { supabaseAdmin, type Provider, type Booking } from '@/lib/supabase'
 import AdminLogin from '../AdminLogin'
 import { DEMO_PROVIDERS } from '../demoProviders'
+import { DEMO_BOOKINGS } from '../demoBookings'
 import ProvidersManager from './ProvidersManager'
 
 export const runtime = 'nodejs'
@@ -23,6 +24,7 @@ export default async function ProvidersPage() {
   }
 
   let providers: Provider[] = []
+  let bookings: Booking[] = []
   let backendReady = true
   try {
     const { data, error } = await supabaseAdmin
@@ -32,12 +34,26 @@ export default async function ProvidersPage() {
       .limit(200)
     if (error) throw error
     providers = (data ?? []) as Provider[]
+
+    const { data: bk } = await supabaseAdmin
+      .from('bookings')
+      .select(
+        'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, provider_id, payment_status, payment_link, status, created_at'
+      )
+      .not('provider_id', 'is', null)
+      .neq('status', 'cancelled')
+      .limit(500)
+    bookings = (bk ?? []) as Booking[]
   } catch {
     backendReady = false
   }
 
   const showingSample = providers.length === 0
   const rows = showingSample ? DEMO_PROVIDERS : providers
+  const bookingRows = showingSample ? DEMO_BOOKINGS : bookings
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -73,7 +89,13 @@ export default async function ProvidersPage() {
           </div>
         )}
 
-        <ProvidersManager initial={rows} canPersist={backendReady && !showingSample} />
+        <ProvidersManager
+          initial={rows}
+          initialBookings={bookingRows}
+          canPersist={backendReady && !showingSample}
+          supabaseUrl={supabaseUrl}
+          supabaseAnonKey={supabaseAnonKey}
+        />
       </div>
     </main>
   )
