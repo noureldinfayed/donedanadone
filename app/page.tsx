@@ -3,7 +3,6 @@ import Hero from '@/components/sections/Hero'
 import Services from '@/components/sections/Services'
 import HowItWorks from '@/components/sections/HowItWorks'
 import Stats from '@/components/sections/Stats'
-import Business from '@/components/sections/Business'
 import Footer from '@/components/sections/Footer'
 
 export default function Page() {
@@ -15,7 +14,6 @@ export default function Page() {
         <Services />
         <HowItWorks />
         <Stats />
-        <Business />
       </main>
       <Footer />
     </>

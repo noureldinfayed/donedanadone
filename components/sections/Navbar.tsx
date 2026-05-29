@@ -25,13 +25,6 @@ export default function Navbar() {
         <a href="#top" className="font-display text-xl font-bold tracking-tight text-saffron">
           DoneDanaDone
         </a>
-
-        <a
-          href="#business"
-          className="rounded-full border border-saffron/60 px-4 py-2 text-sm font-medium text-saffron transition-colors hover:bg-saffron hover:text-ink"
-        >
-          For Businesses
-        </a>
       </div>
     </header>
   )
