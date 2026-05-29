@@ -13,6 +13,10 @@ interface Props {
 const SERVICE_LABEL: Record<string, string> = {
   home_chef: 'Home Chef',
   house_help: 'House Help',
+  dog_walker: 'Dog Walker',
+  babysitter: 'Babysitter',
+  electrician: 'Electrician',
+  plumber: 'Plumber',
 }
 
 function statusClass(status: string) {

@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { supabaseAdmin, type Booking } from '@/lib/supabase'
 import AdminLogin from './AdminLogin'
 import BookingsTable from './BookingsTable'
+import { DEMO_BOOKINGS } from './demoBookings'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,6 +44,11 @@ export default async function AdminPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
+  // No live data yet → fall back to illustrative sample orders so the
+  // dashboard demos well. Clearly badged so it's never mistaken for real.
+  const showingSample = initial.length === 0
+  const rows = showingSample ? DEMO_BOOKINGS : initial
+
   return (
     <main className="min-h-screen px-6 py-8">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -59,15 +65,19 @@ export default async function AdminPage() {
           </div>
         </header>
 
-        {!backendReady && (
-          <div className="rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Backend not connected yet — set the Supabase environment variables to
-            see live bookings. This is expected during the prototype phase.
+        {showingSample && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <span className="inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide">
+              Sample data
+            </span>
+            {backendReady
+              ? 'No live bookings yet — showing example orders so you can preview the dashboard.'
+              : 'Backend not connected yet — showing example orders. Set the Supabase env vars to see live bookings.'}
           </div>
         )}
 
         <BookingsTable
-          initial={initial}
+          initial={rows}
           supabaseUrl={supabaseUrl}
           supabaseAnonKey={supabaseAnonKey}
         />
