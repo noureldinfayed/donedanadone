@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { supabaseAdmin, type Booking } from '@/lib/supabase'
 import AdminLogin from './AdminLogin'
@@ -31,12 +32,15 @@ export default async function AdminPage() {
     const { data, error } = await supabaseAdmin
       .from('bookings')
       .select(
-        'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, payment_status, payment_link, status, created_at'
+        'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, provider_id, payment_status, payment_link, status, created_at, provider:providers(name)'
       )
       .order('created_at', { ascending: false })
       .limit(200)
     if (error) throw error
-    initial = (data ?? []) as Booking[]
+    initial = ((data ?? []) as unknown[]).map((row) => {
+      const r = row as Booking & { provider?: { name: string } | null }
+      return { ...r, provider_name: r.provider?.name ?? null }
+    }) as Booking[]
   } catch {
     backendReady = false
   }
@@ -52,16 +56,29 @@ export default async function AdminPage() {
   return (
     <main className="min-h-screen px-6 py-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">DoneDanaDone — Bookings</h1>
             <p className="text-muted text-sm">
-              Live view of incoming WhatsApp bookings.
+              Live view of incoming WhatsApp bookings — providers auto-assigned.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span className="size-2 rounded-full bg-green-500 animate-pulse" />
-            realtime
+          <div className="flex items-center gap-4">
+            <nav className="flex items-center gap-2 text-sm">
+              <span className="rounded-lg bg-saffron px-3 py-1.5 font-medium text-ink">
+                Bookings
+              </span>
+              <Link
+                href="/admin/providers"
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-muted hover:text-white"
+              >
+                Providers
+              </Link>
+            </nav>
+            <div className="flex items-center gap-2 text-xs text-muted">
+              <span className="size-2 rounded-full bg-green-500 animate-pulse" />
+              realtime
+            </div>
           </div>
         </header>
 

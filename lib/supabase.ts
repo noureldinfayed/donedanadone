@@ -58,6 +58,21 @@ export interface ConversationData {
   booking_id?: string
 }
 
+export interface Provider {
+  id: string
+  name: string
+  phone: string | null
+  profession: string | null
+  services: string[]
+  areas: string[]
+  working_days: number[] // 0=Sun .. 6=Sat
+  start_time: string // 'HH:MM' 24h
+  end_time: string // 'HH:MM' 24h
+  rating: number
+  active: boolean
+  created_at: string
+}
+
 export interface Booking {
   id: string
   user_phone: string
@@ -69,8 +84,11 @@ export interface Booking {
   address: string | null
   landmark: string | null
   notes: string | null
+  provider_id: string | null
   payment_status: string
   payment_link: string | null
   status: string
   created_at: string
+  // Optional joined provider name for display (admin dashboard).
+  provider_name?: string | null
 }

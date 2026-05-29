@@ -7,6 +7,9 @@ import type {
 } from './supabase'
 import { parseIntent } from './gemini'
 import { createPaymentLink } from './razorpay'
+import { autoAssignProvider } from './match'
+import { notifyProviderOfBooking } from './notify'
+import type { Booking } from './supabase'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const BOOKING_PRICE_INR = Number(process.env.BOOKING_PRICE_INR ?? 499)
@@ -423,7 +426,9 @@ export async function buildConfirmationMessage(bookingId: string): Promise<{
 } | null> {
   const { data: booking, error } = await supabaseAdmin
     .from('bookings')
-    .select('id, user_phone, service_type, slot_date, slot_time, address')
+    .select(
+      'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, provider_id, payment_status, payment_link, status, created_at'
+    )
     .eq('id', bookingId)
     .maybeSingle()
   if (error || !booking) {
@@ -444,16 +449,27 @@ export async function buildConfirmationMessage(bookingId: string): Promise<{
       ? SLOT_DAY_LABEL[booking.slot_date as SlotDate]
       : (booking.slot_date ?? '')
 
+  // ── Fully automated provider assignment ──
+  // Match the best eligible provider, then notify them (notification is gated
+  // until the WhatsApp Business number is live — see lib/notify.ts).
+  const provider = await autoAssignProvider(booking.id, booking)
+  if (provider) {
+    await notifyProviderOfBooking(provider, booking as Booking)
+  }
+
   await saveState(booking.user_phone, 'CONFIRMED', {})
 
   const shortId = booking.id.slice(0, 8).toUpperCase()
+  const proLine = provider
+    ? `👷 ${provider.name}${provider.profession ? ` (${provider.profession})` : ''} has been assigned and will arrive on time.`
+    : 'A verified professional will be assigned and arrive on time.'
   const message =
     '🎉 Booking Confirmed!\n\n' +
     `Booking ID: ${shortId}\n` +
     `Service: ${service}\n` +
     `Date & Time: ${day} ${booking.slot_time ?? ''}\n` +
     `📍 ${booking.address ?? ''}\n\n` +
-    `Our professional will arrive on time. For support: ${SUPPORT_PHONE}\n\n` +
+    `${proLine} For support: ${SUPPORT_PHONE}\n\n` +
     'Thank you for choosing DoneDanaDone! 🙏'
   return { phone: booking.user_phone, message }
 }

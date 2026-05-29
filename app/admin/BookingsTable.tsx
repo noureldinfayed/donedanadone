@@ -22,6 +22,7 @@ const SERVICE_LABEL: Record<string, string> = {
 function statusClass(status: string) {
   switch (status) {
     case 'confirmed':
+    case 'assigned':
       return 'bg-green-100 text-green-800'
     case 'pending':
       return 'bg-amber-100 text-amber-800'
@@ -97,6 +98,7 @@ export default function BookingsTable({ initial, supabaseUrl, supabaseAnonKey }:
             <th className="px-4 py-3">Area</th>
             <th className="px-4 py-3">Date</th>
             <th className="px-4 py-3">Time</th>
+            <th className="px-4 py-3">Provider</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Payment</th>
           </tr>
@@ -114,6 +116,13 @@ export default function BookingsTable({ initial, supabaseUrl, supabaseAnonKey }:
               <td className="px-4 py-3">{r.area ?? '—'}</td>
               <td className="px-4 py-3 capitalize">{r.slot_date ?? '—'}</td>
               <td className="px-4 py-3">{r.slot_time ?? '—'}</td>
+              <td className="px-4 py-3">
+                {r.provider_name ? (
+                  r.provider_name
+                ) : (
+                  <span className="text-xs italic text-gray-400">auto-assigning…</span>
+                )}
+              </td>
               <td className="px-4 py-3">
                 <span
                   className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusClass(
