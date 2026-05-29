@@ -1,0 +1,30 @@
+{
+  "_comment": "English translations — add keys as sections are built.",
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "about": "About",
+    "contact": "Contact",
+    "cta": "Get in Touch"
+  },
+  "hero": {
+    "headline": "Your Compelling Headline Here",
+    "subheadline": "A concise supporting statement that drives the visitor to action.",
+    "cta": "Get Started"
+  },
+  "contact": {
+    "headline": "Get in Touch",
+    "subheadline": "Fill out the form and we'll be in touch shortly.",
+    "name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "message": "Message",
+    "submit": "Send Message",
+    "success": "Thank you! We'll get back to you within 24 hours.",
+    "error": "Something went wrong. Please try again."
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "stamp": "Architected & Engineered by Fayed Intelligence"
+  }
+}

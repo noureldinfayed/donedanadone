@@ -1,0 +1,30 @@
+{
+  "_comment": "German translations — fill in per project.",
+  "nav": {
+    "home": "Startseite",
+    "services": "Leistungen",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "cta": "Kontakt aufnehmen"
+  },
+  "hero": {
+    "headline": "Ihre überzeugende Überschrift hier",
+    "subheadline": "Eine prägnante unterstützende Aussage, die den Besucher zum Handeln animiert.",
+    "cta": "Jetzt starten"
+  },
+  "contact": {
+    "headline": "Kontakt aufnehmen",
+    "subheadline": "Füllen Sie das Formular aus und wir melden uns in Kürze.",
+    "name": "Vollständiger Name",
+    "email": "E-Mail-Adresse",
+    "phone": "Telefonnummer",
+    "message": "Nachricht",
+    "submit": "Nachricht senden",
+    "success": "Danke! Wir melden uns innerhalb von 24 Stunden.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "footer": {
+    "rights": "Alle Rechte vorbehalten.",
+    "stamp": "Konzipiert & entwickelt von Fayed Intelligence"
+  }
+}

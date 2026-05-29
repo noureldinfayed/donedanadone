@@ -1,0 +1,70 @@
+{
+  "_comment": "This file shows the expected shape of content data. Replace with real client data or connect to a CMS. Each top-level key maps to a page section.",
+
+  "hero": {
+    "headline": "Your Compelling Headline Here",
+    "subheadline": "A concise supporting statement that reinforces the headline and drives the visitor to action.",
+    "ctaLabel": "Get Started",
+    "ctaHref": "#contact",
+    "imageUrl": "/images/hero.jpg",
+    "imageAlt": "Hero image description"
+  },
+
+  "services": [
+    {
+      "id": "service-1",
+      "title": "Service One",
+      "description": "Brief description of this service and the value it delivers to the client.",
+      "icon": "Zap"
+    },
+    {
+      "id": "service-2",
+      "title": "Service Two",
+      "description": "Brief description of this service and the value it delivers to the client.",
+      "icon": "Shield"
+    },
+    {
+      "id": "service-3",
+      "title": "Service Three",
+      "description": "Brief description of this service and the value it delivers to the client.",
+      "icon": "Star"
+    }
+  ],
+
+  "about": {
+    "headline": "About [Business Name]",
+    "body": "A paragraph or two describing the business, its mission, and why clients choose them. Keep it concise and customer-focused.",
+    "imageUrl": "/images/about.jpg",
+    "imageAlt": "About us image"
+  },
+
+  "testimonials": [
+    {
+      "id": "t-1",
+      "author": "Client Name",
+      "role": "CEO",
+      "company": "Company Name",
+      "body": "Testimonial text that highlights a specific, believable outcome or experience with the business.",
+      "rating": 5
+    }
+  ],
+
+  "faq": [
+    {
+      "id": "faq-1",
+      "question": "What is your typical turnaround time?",
+      "answer": "Answer the question clearly and concisely."
+    },
+    {
+      "id": "faq-2",
+      "question": "Do you offer a free consultation?",
+      "answer": "Answer the question clearly and concisely."
+    }
+  ],
+
+  "contact": {
+    "headline": "Get in Touch",
+    "subheadline": "We'd love to hear from you. Fill out the form and we'll be in touch shortly.",
+    "successMessage": "Thank you! We'll get back to you within 24 hours."
+  }
+}
