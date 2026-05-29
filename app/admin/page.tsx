@@ -22,13 +22,23 @@ export default async function AdminPage() {
     )
   }
 
-  const { data: initial } = await supabaseAdmin
-    .from('bookings')
-    .select(
-      'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, payment_status, payment_link, status, created_at'
-    )
-    .order('created_at', { ascending: false })
-    .limit(200)
+  // Prototype-safe: if Supabase isn't configured (or the table doesn't exist
+  // yet) the dashboard renders empty with a notice instead of 500-ing.
+  let initial: Booking[] = []
+  let backendReady = true
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('bookings')
+      .select(
+        'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, payment_status, payment_link, status, created_at'
+      )
+      .order('created_at', { ascending: false })
+      .limit(200)
+    if (error) throw error
+    initial = (data ?? []) as Booking[]
+  } catch {
+    backendReady = false
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
@@ -49,8 +59,15 @@ export default async function AdminPage() {
           </div>
         </header>
 
+        {!backendReady && (
+          <div className="rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Backend not connected yet — set the Supabase environment variables to
+            see live bookings. This is expected during the prototype phase.
+          </div>
+        )}
+
         <BookingsTable
-          initial={(initial ?? []) as Booking[]}
+          initial={initial}
           supabaseUrl={supabaseUrl}
           supabaseAnonKey={supabaseAnonKey}
         />
