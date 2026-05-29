@@ -2,22 +2,10 @@
 @config "../tailwind.config.ts";
 
 /* ============================================================
-   CSS RESET
-   ============================================================ */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* ============================================================
    CSS CUSTOM PROPERTY SLOTS
    Fill these per project — changing one var changes the whole site.
    ============================================================ */
-:root {
-  /* Brand Colors — fill per project */
+@theme {
   --color-primary: #000000;
   --color-secondary: #ffffff;
   --color-accent: #000000;
@@ -25,59 +13,57 @@
   --color-text: #111111;
   --color-muted: #6b7280;
 
-  /* Typography — assign after importing Google Fonts in layout.tsx */
   --font-display: system-ui, sans-serif;
   --font-body: system-ui, sans-serif;
 }
 
 /* ============================================================
    BASE STYLES
+   Wrapped in @layer base so they sit BELOW Tailwind utilities in
+   the cascade — un-layered rules override every layered rule in
+   Tailwind v4, which would nuke utilities like .px-6 / .py-16.
    ============================================================ */
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  font-family: var(--font-body);
-  background-color: var(--color-background);
-  color: var(--color-text);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-/* ============================================================
-   SELECTION COLOR
-   ============================================================ */
-::selection {
-  background-color: var(--color-accent);
-  color: var(--color-secondary);
-}
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-secondary);
+  }
 
-/* ============================================================
-   SCROLLBAR STYLING
-   ============================================================ */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-::-webkit-scrollbar-thumb {
-  background-color: var(--color-primary);
-  border-radius: 999px;
-}
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 999px;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  opacity: 0.8;
-}
+  ::-webkit-scrollbar-thumb:hover {
+    opacity: 0.8;
+  }
 
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) transparent;
+  }
 }
