@@ -47,16 +47,42 @@ function slotWeekday(slotDate: string | null): number {
   return now.getDay() // 'today' / unknown
 }
 
+// Pull every "HH:MM (AM/PM)" found in a slot string → minutes since midnight.
+// '7:00 PM – 9:00 PM' → [1140, 1260]; '11:00 AM' → [660]; 'ASAP' → [].
+function parseAllTimes(slotTime: string | null): number[] {
+  if (!slotTime) return []
+  const re = /(\d{1,2}):(\d{2})\s*(AM|PM)?/gi
+  const out: number[] = []
+  let m: RegExpExecArray | null
+  while ((m = re.exec(slotTime))) {
+    let h = parseInt(m[1], 10)
+    const min = parseInt(m[2], 10)
+    const mer = m[3]?.toUpperCase()
+    if (mer === 'PM' && h < 12) h += 12
+    if (mer === 'AM' && h === 12) h = 0
+    out.push(h * 60 + min)
+  }
+  return out
+}
+
 function minutesOf(slotTime: string | null): number {
-  if (!slotTime) return 0
-  const m = slotTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i)
-  if (!m) return 0
-  let h = parseInt(m[1], 10)
-  const min = parseInt(m[2], 10)
-  const mer = m[3]?.toUpperCase()
-  if (mer === 'PM' && h < 12) h += 12
-  if (mer === 'AM' && h === 12) h = 0
-  return h * 60 + min
+  return parseAllTimes(slotTime)[0] ?? 0
+}
+
+function toMin(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map((n) => parseInt(n, 10))
+  return (h || 0) * 60 + (m || 0)
+}
+
+function jobStatusClass(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'border-amber-400/40 bg-amber-400/15 text-amber-200'
+    case 'cancelled':
+      return 'border-red-400/40 bg-red-400/10 text-red-200'
+    default: // assigned / confirmed
+      return 'border-saffron/40 bg-saffron/15 text-saffron'
+  }
 }
 
 interface Props {
@@ -274,6 +300,12 @@ function ProviderCard({
 }
 
 // ─── Live weekly calendar for one provider ────────────────────────────────────
+// A real hour-axis grid: availability is shaded, jobs sit at their actual time,
+// today is highlighted with a live "now" line, and ASAP/out-of-window jobs are
+// surfaced separately so nothing is silently dropped.
+const HOUR_H = 44 // px per hour
+const DEFAULT_JOB_MINS = 90
+
 function ProviderCalendar({
   provider,
   bookings,
@@ -286,17 +318,48 @@ function ProviderCalendar({
   onClose: () => void
 }) {
   const workingSet = new Set(provider.working_days)
+  const todayWd = new Date().getDay()
+
+  // Build the visible time window from the provider's hours, padded to whole
+  // hours and widened to fit any job that starts/ends outside it.
+  const { gridStart, gridEnd, hours } = useMemo(() => {
+    let lo = toMin(provider.start_time)
+    let hi = toMin(provider.end_time)
+    for (const b of bookings) {
+      const ts = parseAllTimes(b.slot_time)
+      for (const t of ts) {
+        lo = Math.min(lo, t)
+        hi = Math.max(hi, t + 30)
+      }
+    }
+    const gridStart = Math.floor(lo / 60) * 60
+    const gridEnd = Math.max(gridStart + 60, Math.ceil(hi / 60) * 60)
+    const hours: number[] = []
+    for (let h = gridStart; h <= gridEnd; h += 60) hours.push(h)
+    return { gridStart, gridEnd, hours }
+  }, [provider.start_time, provider.end_time, bookings])
+
+  const span = gridEnd - gridStart
+  const gridH = (span / 60) * HOUR_H
+
+  // Split jobs per weekday into positioned (have a time) and unscheduled (ASAP).
   const byDay = useMemo(() => {
-    const map = new Map<number, Booking[]>()
+    const map = new Map<number, { positioned: Booking[]; unscheduled: Booking[] }>()
+    for (const d of WEEK) map.set(d.day, { positioned: [], unscheduled: [] })
     for (const b of bookings) {
       const wd = slotWeekday(b.slot_date)
-      const arr = map.get(wd) ?? []
-      arr.push(b)
-      map.set(wd, arr)
+      const bucket = map.get(wd)
+      if (!bucket) continue
+      if (parseAllTimes(b.slot_time).length) bucket.positioned.push(b)
+      else bucket.unscheduled.push(b)
     }
-    for (const arr of map.values()) arr.sort((a, b) => minutesOf(a.slot_time) - minutesOf(b.slot_time))
     return map
   }, [bookings])
+
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes()
+  const showNow = nowMin >= gridStart && nowMin <= gridEnd
+  const availTop = ((toMin(provider.start_time) - gridStart) / span) * gridH
+  const availH = ((toMin(provider.end_time) - toMin(provider.start_time)) / span) * gridH
 
   return (
     <div
@@ -304,10 +367,10 @@ function ProviderCalendar({
       onClick={onClose}
     >
       <div
-        className="max-h-[85vh] w-full max-w-5xl overflow-auto rounded-2xl border border-white/10 bg-ink p-6"
+        className="max-h-[88vh] w-full max-w-5xl overflow-auto rounded-2xl border border-white/10 bg-ink p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h3 className="font-display text-xl font-semibold text-white">
               {provider.name}{' '}
@@ -331,49 +394,154 @@ function ProviderCalendar({
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
-          {WEEK.map((d) => {
-            const on = workingSet.has(d.day)
-            const jobs = byDay.get(d.day) ?? []
-            return (
-              <div
-                key={d.day}
-                className={`min-h-44 rounded-xl border p-2 ${
-                  on ? 'border-white/10 bg-ink-soft' : 'border-white/5 bg-white/[0.02]'
-                }`}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className={`text-xs font-semibold ${on ? 'text-white' : 'text-white/30'}`}>
+        {/* Legend */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-whatsapp/15 ring-1 ring-whatsapp/30" /> Available
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-saffron/40" /> Assigned
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-amber-400/40" /> Pending
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-3 rounded-sm border-t-2 border-red-500" /> Now
+          </span>
+        </div>
+
+        <div className="min-w-[640px]">
+          {/* Day headers */}
+          <div className="grid grid-cols-[44px_repeat(7,1fr)] gap-1">
+            <div />
+            {WEEK.map((d) => {
+              const isToday = d.day === todayWd
+              const count = byDay.get(d.day)
+              const total = (count?.positioned.length ?? 0) + (count?.unscheduled.length ?? 0)
+              return (
+                <div
+                  key={d.day}
+                  className={`rounded-t-lg px-1 py-1.5 text-center ${
+                    isToday ? 'bg-saffron/15' : ''
+                  }`}
+                >
+                  <p
+                    className={`text-xs font-semibold ${
+                      isToday ? 'text-saffron' : workingSet.has(d.day) ? 'text-white' : 'text-white/30'
+                    }`}
+                  >
                     {d.full}
-                  </span>
-                  {!on && <span className="text-[10px] uppercase text-white/20">off</span>}
-                </div>
-                {on && (
-                  <p className="mb-2 text-[10px] text-muted">
-                    {fmtHour(provider.start_time)}–{fmtHour(provider.end_time)}
                   </p>
-                )}
-                <div className="space-y-1.5">
-                  {jobs.map((b) => (
+                  <p className="text-[10px] text-muted">{total > 0 ? `${total} job${total === 1 ? '' : 's'}` : '—'}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Grid body */}
+          <div className="grid grid-cols-[44px_repeat(7,1fr)] gap-1">
+            {/* Hour axis */}
+            <div className="relative" style={{ height: gridH }}>
+              {hours.map((h) => (
+                <div
+                  key={h}
+                  className="absolute right-1 -translate-y-1/2 text-[10px] text-muted"
+                  style={{ top: ((h - gridStart) / span) * gridH }}
+                >
+                  {fmtHour(`${String(Math.floor(h / 60)).padStart(2, '0')}:00`)}
+                </div>
+              ))}
+            </div>
+
+            {/* Day columns */}
+            {WEEK.map((d) => {
+              const on = workingSet.has(d.day)
+              const isToday = d.day === todayWd
+              const bucket = byDay.get(d.day) ?? { positioned: [], unscheduled: [] }
+              return (
+                <div
+                  key={d.day}
+                  className={`relative rounded-lg border ${
+                    on ? 'border-white/10 bg-ink-soft' : 'border-white/5 bg-white/[0.015]'
+                  } ${isToday ? 'ring-1 ring-saffron/40' : ''}`}
+                  style={{ height: gridH }}
+                >
+                  {/* Hour gridlines */}
+                  {hours.slice(1).map((h) => (
+                    <div
+                      key={h}
+                      className="absolute inset-x-0 border-t border-white/[0.06]"
+                      style={{ top: ((h - gridStart) / span) * gridH }}
+                    />
+                  ))}
+
+                  {/* Availability band */}
+                  {on && availH > 0 && (
+                    <div
+                      className="absolute inset-x-0 bg-whatsapp/[0.07] ring-1 ring-inset ring-whatsapp/20"
+                      style={{ top: availTop, height: availH }}
+                    />
+                  )}
+
+                  {/* Now line (today only) */}
+                  {isToday && showNow && (
+                    <div
+                      className="absolute inset-x-0 z-20 border-t-2 border-red-500"
+                      style={{ top: ((nowMin - gridStart) / span) * gridH }}
+                    >
+                      <span className="absolute -left-1 -top-1 size-2 rounded-full bg-red-500" />
+                    </div>
+                  )}
+
+                  {/* Unscheduled / ASAP jobs pinned at the top */}
+                  {bucket.unscheduled.map((b, i) => (
                     <div
                       key={b.id}
-                      className="rounded-lg border border-saffron/30 bg-saffron/10 p-1.5 text-[11px] leading-tight"
+                      className="absolute inset-x-0.5 z-10 rounded-md border border-dashed border-saffron/50 bg-saffron/10 px-1 py-0.5 text-[10px] leading-tight text-saffron"
+                      style={{ top: 2 + i * 30 }}
+                      title={`${b.user_name ?? 'Customer'} · ${b.slot_time ?? 'ASAP'}`}
                     >
-                      <p className="font-semibold text-saffron">{b.slot_time ?? '—'}</p>
-                      <p className="text-white">
-                        {b.service_type ? SERVICE_EMOJI[b.service_type] ?? '' : ''}{' '}
-                        {b.user_name ?? 'Customer'}
-                      </p>
-                      <p className="text-muted">{b.area ?? ''}</p>
+                      <span className="font-semibold">ASAP</span>{' '}
+                      {b.service_type ? SERVICE_EMOJI[b.service_type] ?? '' : ''}
                     </div>
                   ))}
-                  {on && jobs.length === 0 && (
-                    <p className="text-[11px] italic text-white/25">Free</p>
+
+                  {/* Positioned job blocks */}
+                  {bucket.positioned.map((b) => {
+                    const times = parseAllTimes(b.slot_time)
+                    const s = times[0]
+                    const e = times[1] ?? s + DEFAULT_JOB_MINS
+                    const top = ((s - gridStart) / span) * gridH
+                    const height = Math.max(26, ((e - s) / span) * gridH)
+                    return (
+                      <div
+                        key={b.id}
+                        className={`absolute inset-x-0.5 z-10 overflow-hidden rounded-md border px-1 py-0.5 text-[10px] leading-tight ${jobStatusClass(
+                          b.status
+                        )}`}
+                        style={{ top, height }}
+                        title={`${b.slot_time ?? ''} · ${b.user_name ?? 'Customer'} · ${
+                          b.area ?? ''
+                        }`}
+                      >
+                        <p className="truncate font-semibold">{b.slot_time ?? '—'}</p>
+                        <p className="truncate text-white">
+                          {b.service_type ? SERVICE_EMOJI[b.service_type] ?? '' : ''}{' '}
+                          {b.user_name ?? 'Customer'}
+                        </p>
+                      </div>
+                    )
+                  })}
+
+                  {!on && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[10px] uppercase tracking-wide text-white/20">Off</span>
+                    </div>
                   )}
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
