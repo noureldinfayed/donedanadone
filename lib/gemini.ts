@@ -70,3 +70,55 @@ export async function parseIntent(message: string): Promise<ParsedIntent> {
     return empty
   }
 }
+
+function fallbackUnavailableUntil(message: string, now: Date): string | null {
+  const m = message.match(/\b(?:after|from|until|post)?\s*(\d{1,2})(?::?(\d{2}))?\s*(am|pm)?\b/i)
+  if (!m) return null
+  let hour = parseInt(m[1], 10)
+  const minute = m[2] ? parseInt(m[2], 10) : 0
+  const mer = m[3]?.toLowerCase()
+  if (mer === 'pm' && hour < 12) hour += 12
+  if (mer === 'am' && hour === 12) hour = 0
+  if (!mer && hour >= 1 && hour <= 7) hour += 12
+  if (hour > 23 || minute > 59) return null
+
+  const until = new Date(now)
+  until.setHours(hour, minute, 0, 0)
+  if (until <= now) until.setDate(until.getDate() + 1)
+  return until.toISOString()
+}
+
+export async function parseUnavailableUntil(
+  message: string,
+  now = new Date()
+): Promise<string | null> {
+  const fallback = fallbackUnavailableUntil(message, now)
+  try {
+    const model = getModel()
+    const prompt =
+      'Extract the time when a provider becomes available again. ' +
+      'Return JSON only: {"unavailable_until":"ISO-8601 string or null"}. ' +
+      'Interpret phrases like "after 13" or "from 14:00" as unavailable until that time today. ' +
+      'If the time has already passed, use the next occurrence. ' +
+      `Current time: ${now.toISOString()}\n\n` +
+      `Provider message: "${message}"`
+    const res = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0,
+      },
+    })
+    const parsed = JSON.parse(res.response.text().trim()) as {
+      unavailable_until?: unknown
+    }
+    if (typeof parsed.unavailable_until !== 'string') return fallback
+    const date = new Date(parsed.unavailable_until)
+    if (Number.isNaN(date.getTime())) return fallback
+    if (date <= now) return fallback
+    return date.toISOString()
+  } catch (err) {
+    console.error('[gemini] parseUnavailableUntil failed:', err)
+    return fallback
+  }
+}

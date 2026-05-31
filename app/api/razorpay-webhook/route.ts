@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { verifyWebhookSignature } from '@/lib/razorpay'
-import { buildConfirmationMessage } from '@/lib/state-machine'
+import { handlePaidBooking } from '@/lib/state-machine'
 import { sendWhatsApp } from '@/lib/twilio'
 
 export const runtime = 'nodejs'
@@ -25,7 +25,21 @@ export async function POST(req: NextRequest) {
     event?: string
     payload?: {
       payment_link?: {
-        entity?: { id?: string; notes?: { booking_id?: string }; status?: string }
+        entity?: {
+          id?: string
+          notes?: { booking_id?: string }
+          status?: string
+          amount?: number
+          amount_paid?: number
+        }
+      }
+      payment?: {
+        entity?: {
+          id?: string
+          amount?: number
+          method?: string
+          created_at?: number
+        }
       }
     }
   }
@@ -46,18 +60,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  // Mark booking confirmed.
+  const payment = payload.payload?.payment?.entity
+  const paymentLink = payload.payload?.payment_link?.entity
+  const amountInPaise = payment?.amount ?? paymentLink?.amount_paid ?? paymentLink?.amount
+  const transactionAt = payment?.created_at
+    ? new Date(payment.created_at * 1000).toISOString()
+    : new Date().toISOString()
+
+  // Mark booking paid and ready for provider confirmation.
   const { error: updateErr } = await supabaseAdmin
     .from('bookings')
-    .update({ payment_status: 'paid', status: 'confirmed' })
+    .update({
+      payment_status: 'success',
+      status: 'confirmed',
+      amount_paid:
+        typeof amountInPaise === 'number' ? Math.round(amountInPaise) / 100 : null,
+      payment_method: payment?.method ?? null,
+      razorpay_payment_id: payment?.id ?? paymentLink?.id ?? null,
+      transaction_timestamp: transactionAt,
+    })
     .eq('id', bookingId)
   if (updateErr) {
     console.error('[razorpay] booking update failed', updateErr)
     return new NextResponse('db error', { status: 500 })
   }
 
-  // Build + send the WhatsApp confirmation.
-  const confirmation = await buildConfirmationMessage(bookingId)
+  // Assign a provider and ask them to confirm. The final customer confirmation
+  // goes out only after the provider replies "1" / "confirm".
+  const confirmation = await handlePaidBooking(bookingId)
   if (confirmation) {
     try {
       await sendWhatsApp(confirmation.phone, confirmation.message)
