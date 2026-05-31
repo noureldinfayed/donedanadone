@@ -1,6 +1,6 @@
 # DoneDanaDone — WhatsApp AI Booking Chatbot
 
-A prototype WhatsApp chatbot for booking home services (Home Chef + House Help) in India. Built as a client pitch demo.
+A prototype WhatsApp chatbot for booking home services (Home Chef + House Help) in India. 
 
 **Flow:** user messages on WhatsApp → AI parses intent → state machine guides through service → area → slot → contact details → Razorpay payment link → confirmation.
 
