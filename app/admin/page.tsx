@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { supabaseAdmin, type Booking } from '@/lib/supabase'
+import { supabaseAdmin, type Booking, type Provider } from '@/lib/supabase'
 import AdminLogin from './AdminLogin'
 import BookingsTable from './BookingsTable'
 import { DEMO_BOOKINGS } from './demoBookings'
+import { DEMO_PROVIDERS } from './demoProviders'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,12 +28,13 @@ export default async function AdminPage() {
   // Prototype-safe: if Supabase isn't configured (or the table doesn't exist
   // yet) the dashboard renders empty with a notice instead of 500-ing.
   let initial: Booking[] = []
+  let providers: Provider[] = []
   let backendReady = true
   try {
     const { data, error } = await supabaseAdmin
       .from('bookings')
       .select(
-        'id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, provider_id, payment_status, payment_link, status, created_at, provider:providers(name)'
+        'id, booking_display_id, user_phone, user_name, service_type, area, slot_date, slot_time, address, landmark, notes, provider_id, payment_status, payment_link, amount_paid, payment_method, razorpay_payment_id, transaction_timestamp, status, created_at, provider:providers(name)'
       )
       .order('created_at', { ascending: false })
       .limit(200)
@@ -41,6 +43,13 @@ export default async function AdminPage() {
       const r = row as Booking & { provider?: { name: string } | null }
       return { ...r, provider_name: r.provider?.name ?? null }
     }) as Booking[]
+
+    const { data: providerRows, error: providerErr } = await supabaseAdmin
+      .from('providers')
+      .select('*')
+      .order('name')
+    if (providerErr) throw providerErr
+    providers = (providerRows ?? []) as Provider[]
   } catch {
     backendReady = false
   }
@@ -52,6 +61,7 @@ export default async function AdminPage() {
   // dashboard demos well. Clearly badged so it's never mistaken for real.
   const showingSample = initial.length === 0
   const rows = showingSample ? DEMO_BOOKINGS : initial
+  const providerRows = showingSample || providers.length === 0 ? DEMO_PROVIDERS : providers
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -95,6 +105,8 @@ export default async function AdminPage() {
 
         <BookingsTable
           initial={rows}
+          providers={providerRows}
+          canPersist={!showingSample && backendReady && providers.length > 0}
           supabaseUrl={supabaseUrl}
           supabaseAnonKey={supabaseAnonKey}
         />

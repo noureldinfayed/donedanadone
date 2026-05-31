@@ -37,6 +37,7 @@ create table if not exists providers (
 
 create table if not exists bookings (
   id uuid default gen_random_uuid() primary key,
+  booking_display_id text unique,
   user_phone text not null,
   user_name text,
   service_type text,
@@ -49,7 +50,38 @@ create table if not exists bookings (
   provider_id uuid references providers(id) on delete set null,
   payment_status text default 'pending',
   payment_link text,
+  amount_paid numeric,
+  payment_method text,
+  razorpay_payment_id text,
+  transaction_timestamp timestamp,
   status text default 'pending',
+  created_at timestamp default now()
+);
+
+create table if not exists customers (
+  id uuid default gen_random_uuid() primary key,
+  phone text unique not null,
+  name text,
+  saved_addresses jsonb default '[]',
+  last_address jsonb,
+  created_at timestamp default now()
+);
+
+create table if not exists blacklist_addresses (
+  id uuid default gen_random_uuid() primary key,
+  city text not null,
+  sector text,
+  apartment text,
+  reason text,
+  created_at timestamp default now()
+);
+
+create table if not exists provider_unavailability (
+  id uuid default gen_random_uuid() primary key,
+  provider_id uuid references providers(id),
+  unavailable_from timestamp not null,
+  unavailable_until timestamp not null,
+  reason text,
   created_at timestamp default now()
 );
 

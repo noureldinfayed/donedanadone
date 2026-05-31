@@ -20,17 +20,17 @@ function buildJobMessage(provider: Provider, booking: Booking): string {
   const service = booking.service_type
     ? SERVICE_LABEL[booking.service_type] ?? booking.service_type
     : 'Service'
-  const shortId = booking.id.slice(0, 8).toUpperCase()
+  const orderId = booking.booking_display_id ?? booking.id.slice(0, 8).toUpperCase()
   return (
-    `🛎️ New job assigned — DoneDanaDone\n\n` +
-    `Hi ${provider.name}, you've been matched to a booking:\n\n` +
-    `Job ID: ${shortId}\n` +
+    'New Booking! 🔔\n\n' +
+    `Order #${orderId}\n` +
     `Service: ${service}\n` +
-    `When: ${booking.slot_date ?? ''} ${booking.slot_time ?? ''}\n` +
-    `📍 ${booking.address ?? ''}${booking.landmark ? ` (${booking.landmark})` : ''}\n` +
-    `Area: ${booking.area ?? ''}\n` +
-    (booking.notes ? `Notes: ${booking.notes}\n` : '') +
-    `\nCustomer: ${booking.user_name ?? ''} ${booking.user_phone.replace(/^whatsapp:/, '')}`
+    `Date: ${booking.slot_date ?? ''} at ${booking.slot_time ?? ''}\n` +
+    `Address: ${booking.address ?? ''}\n` +
+    `Customer: ${booking.user_name ?? ''}\n\n` +
+    'Reply:\n' +
+    '1 - Confirm ✅\n' +
+    '2 - Decline ❌'
   )
 }
 

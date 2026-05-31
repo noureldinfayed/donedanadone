@@ -39,9 +39,28 @@ export function parseSlotTimeToMinutes(slotTime: string | null): number | null {
   return hour * 60 + min
 }
 
+export function resolveBookingDateTime(
+  booking: { slot_date: string | null; slot_time: string | null },
+  now = new Date()
+): Date {
+  const d = resolveSlotDate(booking.slot_date, now)
+  const slotMin = parseSlotTimeToMinutes(booking.slot_time)
+  if (slotMin === null) return d
+  d.setHours(Math.floor(slotMin / 60), slotMin % 60, 0, 0)
+  return d
+}
+
 function hhmmToMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(':').map((n) => parseInt(n, 10))
   return (h || 0) * 60 + (m || 0)
+}
+
+function coversArea(providerAreas: string[], bookingArea: string): boolean {
+  const area = bookingArea.trim().toLowerCase()
+  return providerAreas.some((providerArea) => {
+    const p = providerArea.trim().toLowerCase()
+    return p === area || area.includes(p)
+  })
 }
 
 /** True when a provider can take this booking's service, area, and time slot. */
@@ -52,7 +71,7 @@ export function isProviderEligible(
 ): boolean {
   if (!provider.active) return false
   if (booking.service_type && !provider.services.includes(booking.service_type)) return false
-  if (booking.area && !provider.areas.includes(booking.area)) return false
+  if (booking.area && !coversArea(provider.areas, booking.area)) return false
 
   const weekday = resolveSlotDate(booking.slot_date, now).getDay()
   if (provider.working_days.length && !provider.working_days.includes(weekday)) return false
@@ -78,16 +97,34 @@ export async function autoAssignProvider(bookingId: string, booking: {
   area: string | null
   slot_date: string | null
   slot_time: string | null
-}): Promise<Provider | null> {
+}, excludeProviderIds: string[] = []): Promise<Provider | null> {
   try {
     const { data, error } = await supabaseAdmin
       .from('providers')
       .select('*')
       .eq('active', true)
     if (error) throw error
-    const providers = (data ?? []) as Provider[]
+    const excluded = new Set(excludeProviderIds)
+    const providers = ((data ?? []) as Provider[]).filter((p) => !excluded.has(p.id))
 
-    const eligible = providers.filter((p) => isProviderEligible(p, booking))
+    let eligible = providers.filter((p) => isProviderEligible(p, booking))
+    if (eligible.length === 0) return null
+
+    const bookingAt = resolveBookingDateTime(booking).toISOString()
+    const { data: unavailableRows, error: unavailableErr } = await supabaseAdmin
+      .from('provider_unavailability')
+      .select('provider_id')
+      .in('provider_id', eligible.map((p) => p.id))
+      .lte('unavailable_from', bookingAt)
+      .gt('unavailable_until', bookingAt)
+    if (unavailableErr) throw unavailableErr
+
+    const unavailable = new Set(
+      ((unavailableRows ?? []) as { provider_id: string | null }[])
+        .map((r) => r.provider_id)
+        .filter((id): id is string => !!id)
+    )
+    eligible = eligible.filter((p) => !unavailable.has(p.id))
     if (eligible.length === 0) return null
 
     // Count current load per provider so we spread work, then prefer rating.
@@ -110,7 +147,7 @@ export async function autoAssignProvider(bookingId: string, booking: {
 
     const { error: updErr } = await supabaseAdmin
       .from('bookings')
-      .update({ provider_id: best.id, status: 'assigned' })
+      .update({ provider_id: best.id, status: 'confirmed' })
       .eq('id', bookingId)
     if (updErr) throw updErr
 
