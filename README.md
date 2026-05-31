@@ -1,116 +1,180 @@
-# DoneDanaDone — WhatsApp AI Booking Chatbot
+# DoneDanaDone — WhatsApp AI Booking System
 
-A prototype WhatsApp chatbot for booking home services (Home Chef + House Help) in India. 
+DoneDanaDone is a WhatsApp-first AI booking system for home services in India. Customers book Home Chef or House Help services through WhatsApp, pay through Razorpay, and the admin dashboard tracks bookings, providers, payments, and manual reassignment in real time.
 
-**Flow:** user messages on WhatsApp → AI parses intent → state machine guides through service → area → slot → contact details → Razorpay payment link → confirmation.
+**Flow:** WhatsApp message → AI/state-machine booking flow → address onboarding → slot selection → Razorpay payment → provider confirmation → customer confirmation → admin realtime dashboard.
 
 ## Stack
 
-- **Next.js 16** (app router) — webhook endpoints + admin dashboard
-- **Supabase** — Postgres + realtime for `bookings`, `slots`, `service_areas`, `conversation_state`
-- **Twilio** — WhatsApp Business API send/receive
-- **Gemini 2.5 Flash** — intent NLU for free-text fallback
-- **Razorpay** — payment links (UPI + cards) + webhook for paid confirmation
-
-> n8n is the eventual orchestrator; this prototype wires the logic directly in Next.js API routes.
+- **Next.js 16** App Router — landing page, webhook endpoints, admin dashboard, and server-side admin APIs
+- **Supabase** — Postgres, server-side service-role queries, and realtime booking updates
+- **Meta WhatsApp Cloud API** — direct WhatsApp send/receive integration
+- **Gemini 2.5 Flash** — free-text intent parsing and provider time-reason parsing
+- **Razorpay** — payment links, UPI/card payments, webhook confirmation, and payment metadata
 
 ## Setup
 
-### 1. Install + env
+### 1. Install and Configure Env
 
 ```bash
 npm install
 cp .env.example .env.local
-# fill in Supabase, Twilio, Gemini, Razorpay keys
 ```
+
+Fill in Supabase, Meta WhatsApp Cloud API, Gemini, Razorpay, and admin credentials.
 
 ### 2. Database
 
-Create a Supabase project, then in the SQL editor run [`supabase/schema.sql`](supabase/schema.sql). It creates the 4 tables, seeds 5 serviceable cities + 2 non-serviceable (to demo the rejection flow), and seeds realistic slots for today/tomorrow/weekend across both services.
+Create a Supabase project, then run the SQL in [`supabase/schema.sql`](supabase/schema.sql). For an existing database, run the migration in [`supabase/migrations/20260531000000_customers_blacklist_provider_unavailability.sql`](supabase/migrations/20260531000000_customers_blacklist_provider_unavailability.sql).
 
-### 3. Twilio sandbox
+Core tables:
 
-1. In the Twilio Console: Messaging → Try it out → WhatsApp. Note the sandbox number and the join code.
-2. Join from your phone (`join <code>` to the sandbox number).
-3. Expose localhost: `ngrok http 3000`.
-4. In the sandbox config, set **WHEN A MESSAGE COMES IN** to `https://<ngrok>.ngrok.app/api/whatsapp` (HTTP POST).
+- `service_areas`, `slots`, `providers`, `bookings`, `conversation_state`
+- `customers` for returning-customer address reuse
+- `blacklist_addresses` for blocked apartment/sector/city combinations
+- `provider_unavailability` for provider declines and temporary unavailability
 
-### 4. Razorpay test mode
+Bookings include a short readable `booking_display_id` in the format `DDD-YYYYMMDD-XXXX`.
+
+### 3. WhatsApp Webhook
+
+Expose the app URL and configure the Meta WhatsApp Cloud API webhook to call:
+
+```text
+https://<your-domain>/api/whatsapp
+```
+
+Incoming WhatsApp messages are routed through the state machine in [`lib/state-machine.ts`](lib/state-machine.ts). WhatsApp sends are performed server-side so credentials never reach the browser.
+
+### 4. Razorpay Webhook
+
+In Razorpay test or live mode:
 
 1. Dashboard → Settings → Webhooks → Add Webhook.
-2. URL: `https://<ngrok>.ngrok.app/api/razorpay-webhook`.
-3. Subscribe to event: `payment_link.paid`.
-4. Set the webhook secret and copy it into `.env.local` → `RAZORPAY_WEBHOOK_SECRET`.
+2. URL: `https://<your-domain>/api/razorpay-webhook`.
+3. Subscribe to `payment_link.paid`.
+4. Add the webhook secret to `.env.local` as `RAZORPAY_WEBHOOK_SECRET`.
 
-### 5. Run
+The webhook marks bookings paid, stores payment metadata, assigns an eligible provider, and starts the provider confirmation flow.
+
+### 5. Run Locally
 
 ```bash
 npm run dev
 ```
 
-- Demo landing: <http://localhost:3000>
-- Admin dashboard: <http://localhost:3000/admin> (password from `ADMIN_PASSWORD`, default `admin123`)
+- Landing page: <http://localhost:3000>
+- Admin dashboard: <http://localhost:3000/admin>
+- Providers dashboard: <http://localhost:3000/admin/providers>
 
-## Conversation flow
+## Customer Conversation Flow
 
-```
+```text
 WELCOME
-  "1" / "Home Chef" / "I need a cook"  ─┐
-  "2" / "House Help" / "maid"           ├─→ AREA_CHECK
-                                        │
-AREA_CHECK                              │
-  serviceable area  → SLOT_DAY_SELECT   │
-  non-serviceable   → rejection, reset  │
-                                        │
-SLOT_DAY_SELECT → SLOT_TIME_SELECT → COLLECT_NAME
-  → COLLECT_ADDRESS → COLLECT_LANDMARK → COLLECT_NOTES
-  → PAYMENT (creates booking + Razorpay link, sends WhatsApp)
-                                        │
-[Razorpay webhook] → CONFIRMED          ┘
-  → marks booking paid, sends booking ID over WhatsApp
+  → AREA_CHECK
+  → RETURNING_CUSTOMER_CHECK
+  → ADDRESS_CITY
+  → ADDRESS_SECTOR
+  → ADDRESS_APARTMENT
+  → BLACKLIST_CHECK
+  → SLOT_DAY_SELECT
+  → SLOT_TIME_SELECT
+  → COLLECT_NAME
+  → COLLECT_LANDMARK
+  → COLLECT_NOTES
+  → PAYMENT
 ```
 
-Free-text fallbacks ("I need a cook tomorrow in Noida") are normalized by Gemini 2.5 Flash, which extracts `service_type`, `time_preference`, and `area` to fast-forward the state machine.
+Address onboarding:
 
-Universal reset words anywhere: `menu`, `restart`, `reset`, `start`, `hi`, `hello`.
+- Returning customers can reuse saved addresses or choose `New Address`.
+- New customers choose city, sector/locality, then type apartment/building and flat number.
+- Blacklisted addresses are rejected before slot selection.
+- Valid addresses are saved to the `customers` table.
 
-## File map
+Free-text messages like `I need a cook tomorrow in Noida` are normalized by Gemini 2.5 Flash to extract service, area, and time preference.
 
+Universal customer reset words: `menu`, `restart`, `reset`, `start`, `hi`, `hello`, `hey`.
+
+## Payment and Provider Confirmation
+
+After payment:
+
+1. Razorpay calls `/api/razorpay-webhook`.
+2. The booking is marked `confirmed` with `payment_status = success`.
+3. The matcher assigns an active provider for the same service and area who is available at the booking time.
+4. The provider receives a WhatsApp confirmation request:
+
+```text
+New Booking! 🔔
+
+Order #[booking_id]
+Service: [service]
+Date: [date] at [time]
+Address: [address]
+Customer: [name]
+
+Reply:
+1 - Confirm ✅
+2 - Decline ❌
 ```
+
+Provider replies:
+
+- `1` / `confirm` → booking becomes `provider_confirmed`, customer receives final confirmation.
+- `2` / `decline` → provider is asked if they are working today.
+- If not working, all-day unavailability is recorded.
+- If working, the decline reason is collected; time-based reasons are parsed and stored in `provider_unavailability`.
+- If another provider is available, the booking is reassigned and the new provider is notified.
+- If no provider is available, booking becomes `needs_manual_assignment` and the customer is told the provider will be confirmed shortly.
+
+## Admin Dashboard
+
+The admin dashboard at `/admin` includes:
+
+- Realtime bookings table
+- Columns: Order ID, Customer Name, Phone, Service, Address, Date, Time, Provider, Status, Payment
+- Filters for exact Order ID, customer name, city, status, and date range
+- Provider modal with profile, working days/hours, bookings, ratings summary, and active toggle
+- Payment modal with amount, method, Razorpay payment ID, timestamp, and status
+- Manual reassignment modal filtered by service type and area
+- Status colors for `pending`, `confirmed`, `provider_confirmed`, `completed`, `cancelled`, and `needs_manual_assignment`
+
+Admin mutations are handled by server-side routes using the Supabase service-role key:
+
+- `/api/admin/bookings/reassign`
+- `/api/admin/providers/active`
+- `/api/admin/providers`
+- `/api/admin/login`
+
+The browser only receives the Supabase anon key for realtime booking subscriptions.
+
+## File Map
+
+```text
 app/
-  page.tsx                       Landing
-  layout.tsx                     Root layout
-  admin/                         Password-gated realtime bookings table
-  booking/thanks/page.tsx        Razorpay callback landing
+  page.tsx                         Landing page
+  admin/                           Bookings and providers dashboard
+  booking/thanks/page.tsx          Razorpay callback landing
   api/
-    whatsapp/route.ts            Twilio incoming WhatsApp webhook
-    razorpay-webhook/route.ts    Razorpay payment_link.paid webhook
-    admin/login/route.ts         Admin password check
+    whatsapp/route.ts              Incoming WhatsApp webhook
+    razorpay-webhook/route.ts      Razorpay payment webhook
+    admin/                         Admin login, provider, and reassignment APIs
 lib/
-  supabase.ts                    Server admin client + domain types
-  twilio.ts                      WhatsApp send helper
-  gemini.ts                      Intent parser (Gemini 2.5 Flash)
-  razorpay.ts                    Payment link create + HMAC verify
-  state-machine.ts               Conversation flow + booking creation
-supabase/schema.sql              Tables + seed data
+  supabase.ts                      Server Supabase client and domain types
+  state-machine.ts                 Customer and provider conversation flows
+  match.ts                         Provider eligibility and assignment
+  gemini.ts                        Intent and time parsing
+  razorpay.ts                      Payment link and webhook signature helpers
+  notify.ts                        Provider notification message builder
+supabase/
+  schema.sql                       Full schema and seed data
+  migrations/                      Incremental SQL migrations
 ```
 
-## Demo script for the pitch
+## Operational Notes
 
-1. From your phone, send `hi` to the Twilio sandbox.
-2. Reply `1` (Home Chef).
-3. Reply `Gurugram`.
-4. Reply `2` (Tomorrow).
-5. Pick a slot.
-6. Name → Address → Landmark (`skip`) → Notes (`skip`).
-7. Tap the Razorpay link, pay with the test card `4111 1111 1111 1111`.
-8. Within a few seconds the WhatsApp confirmation message arrives and the booking turns green on `/admin`.
-
-For the non-serviceable rejection: in step 3 type `Pune`.
-For free-text NLU: instead of step 1+2, send `I need a cook tomorrow in Noida` — the bot fast-forwards to slot selection.
-
-## Notes
-
-- All Twilio + Razorpay calls are server-only; secrets never reach the client.
-- The admin page uses the public anon key with realtime — fine for this demo. Production should add RLS + auth.
-- The conversation state is persisted in Supabase, so multiple Next.js instances can serve the webhook safely.
+- Supabase service-role access is server-side only.
+- Admin realtime stays active through the Supabase anon client.
+- The marketing page is independent from booking/admin workflows.
+- The conversation state is persisted in Supabase so multiple Next.js instances can serve webhooks safely.
