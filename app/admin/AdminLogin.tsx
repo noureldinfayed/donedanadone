@@ -31,28 +31,36 @@ export default function AdminLogin() {
   return (
     <form
       onSubmit={submit}
-      className="w-full max-w-sm space-y-4 rounded-2xl border border-black/10 p-6 shadow-sm"
+      className="w-full max-w-sm rounded-md border border-[#dfe3e8] bg-white shadow-xl shadow-black/10"
     >
-      <div>
-        <h1 className="text-xl font-semibold">Admin login</h1>
-        <p className="text-muted text-sm">Enter the demo password to continue.</p>
+      <div className="flow-wash flex h-16 items-center justify-between rounded-t-md px-5 text-white">
+        <span className="flex size-8 items-center justify-center rounded-full bg-white text-sm font-black text-ink">
+          D
+        </span>
+        <span className="text-sm font-semibold">Admin</span>
       </div>
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        className="w-full rounded-lg border border-black/15 px-3 py-2 outline-none focus:border-black/40"
-        autoFocus
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-lg bg-black px-3 py-2 text-white disabled:opacity-50"
-      >
-        {busy ? 'Signing in…' : 'Sign in'}
-      </button>
+      <div className="space-y-4 p-6">
+        <div>
+          <h1 className="text-xl font-semibold text-ink">Admin login</h1>
+          <p className="text-sm text-muted">Enter the admin password to continue.</p>
+        </div>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          className="w-full rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-ink outline-none focus:border-ink"
+          autoFocus
+        />
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full rounded-md bg-ink px-3 py-2 text-white disabled:opacity-50"
+        >
+          {busy ? 'Signing in...' : 'Sign in'}
+        </button>
+      </div>
     </form>
   )
 }

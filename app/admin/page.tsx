@@ -25,8 +25,8 @@ export default async function AdminPage() {
     )
   }
 
-  // Prototype-safe: if Supabase isn't configured (or the table doesn't exist
-  // yet) the dashboard renders empty with a notice instead of 500-ing.
+  // If Supabase is not configured or the table is missing, keep the dashboard
+  // usable with local sample rows instead of throwing during render.
   let initial: Booking[] = []
   let providers: Provider[] = []
   let backendReady = true
@@ -57,35 +57,34 @@ export default async function AdminPage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-  // No live data yet → fall back to illustrative sample orders so the
-  // dashboard demos well. Clearly badged so it's never mistaken for real.
+  // No live data yet: fall back to sample orders and clearly label them.
   const showingSample = initial.length === 0
   const rows = showingSample ? DEMO_BOOKINGS : initial
   const providerRows = showingSample || providers.length === 0 ? DEMO_PROVIDERS : providers
 
   return (
-    <main className="min-h-screen px-6 py-8">
+    <main className="min-h-screen bg-background px-3 py-6 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+        <header className="flow-wash flex flex-wrap items-center justify-between gap-4 rounded-md px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
           <div>
-            <h1 className="text-2xl font-semibold">DoneDanaDone — Bookings</h1>
-            <p className="text-muted text-sm">
+            <h1 className="text-2xl font-semibold">DoneDanaDone - Bookings</h1>
+            <p className="text-sm text-white/70">
               Live view of incoming WhatsApp bookings — providers auto-assigned.
             </p>
           </div>
           <div className="flex items-center gap-4">
             <nav className="flex items-center gap-2 text-sm">
-              <span className="rounded-lg bg-saffron px-3 py-1.5 font-medium text-ink">
+              <span className="rounded-md bg-white px-3 py-1.5 font-medium text-ink">
                 Bookings
               </span>
               <Link
                 href="/admin/providers"
-                className="rounded-lg border border-white/15 px-3 py-1.5 text-muted hover:text-white"
+                className="rounded-md border border-white/20 px-3 py-1.5 text-white/70 hover:text-white"
               >
                 Providers
               </Link>
             </nav>
-            <div className="flex items-center gap-2 text-xs text-muted">
+            <div className="flex items-center gap-2 text-xs text-white/70">
               <span className="size-2 rounded-full bg-green-500 animate-pulse" />
               realtime
             </div>
@@ -93,8 +92,8 @@ export default async function AdminPage() {
         </header>
 
         {showingSample && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <span className="inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide">
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-[#ead8bd] bg-[#fff6e7] px-4 py-3 text-sm text-[#7a5418]">
+            <span className="inline-flex rounded-md bg-[#f7d7a3] px-2 py-0.5 text-xs font-semibold uppercase">
               Sample data
             </span>
             {backendReady

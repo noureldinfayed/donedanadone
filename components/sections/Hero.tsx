@@ -4,9 +4,9 @@ import { motion } from 'framer-motion'
 
 const CITIES = ['Delhi', 'Gurugram', 'Noida', 'Mumbai', 'Bangalore']
 
-// External QR generator — phone number placeholder until Twilio sandbox is live.
+// External QR generator — phone number placeholder until the WhatsApp number is live.
 const QR_URL =
-  'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://wa.me/+1234567890&bgcolor=0a0a0a&color=25D366&margin=10'
+  'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://wa.me/+1234567890&bgcolor=ffffff&color=151515&margin=10'
 
 const WHATSAPP_LINK = 'https://wa.me/+1234567890'
 
@@ -19,83 +19,97 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative grain-overlay saffron-glow flex min-h-[calc(100vh-4rem)] items-center px-5 py-20 sm:px-8 sm:py-28"
+      className="relative flex min-h-[82vh] items-center bg-background px-3 py-8 sm:px-6 sm:py-12"
     >
-      <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
-        <motion.span
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ duration: 0.6, delay: 0 }}
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-saffron/30 bg-saffron/5 px-3 py-1 text-xs font-medium uppercase tracking-widest text-saffron"
-        >
-          <span className="size-1.5 rounded-full bg-saffron animate-pulse" />
-          Now live in India
-        </motion.span>
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="relative min-h-[620px] rounded-md bg-ink text-white shadow-2xl shadow-black/15">
+          <div className="absolute inset-x-0 bottom-0 h-24 flow-wash" />
+          <div className="absolute inset-y-0 right-0 w-full flow-wash-soft opacity-50 sm:w-1/2" />
 
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl"
-        >
-          Book Home Services
-          <br />
-          <span className="text-saffron">in 30 Seconds.</span>
-        </motion.h1>
+          <div className="relative grid min-h-[620px] items-center gap-10 px-6 py-16 sm:px-10 lg:grid-cols-[1fr_360px] lg:px-14">
+            <div className="max-w-3xl">
+              <motion.span
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                transition={{ duration: 0.6, delay: 0 }}
+                className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white"
+              >
+                <span className="size-1.5 rounded-full bg-whatsapp" />
+                AI booking workflow live in India
+              </motion.span>
 
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="mt-6 max-w-xl text-base text-muted sm:text-lg"
-        >
-          Chat with our AI on WhatsApp. No app, no forms, no waiting.
-        </motion.p>
+              <motion.h1
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="font-display text-4xl font-bold leading-[1.06] sm:text-6xl md:text-7xl"
+              >
+                Book Home Services
+                <br />
+                in 30 Seconds.
+              </motion.h1>
 
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ duration: 0.7, delay: 0.35 }}
-          className="mt-12 flex flex-col items-center gap-6"
-        >
-          <div className="relative">
-            <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-saffron/30 via-transparent to-whatsapp/30 blur-2xl" />
-            <div className="relative rounded-3xl border border-white/10 bg-ink-soft p-4 shadow-2xl">
-              {/* Plain <img> — no next/image per project rules */}
-              <img
-                src={QR_URL}
-                alt="WhatsApp QR code — scan to book on DoneDanaDone"
-                className="block size-[240px] rounded-2xl"
-                width={240}
-                height={240}
-              />
+              <motion.p
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                className="mt-6 max-w-xl text-base text-white/70 sm:text-lg"
+              >
+                A WhatsApp-first booking system for chefs, house help, provider confirmations, and payments.
+              </motion.p>
+
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                transition={{ duration: 0.7, delay: 0.35 }}
+                className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center"
+              >
+                <a
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex h-11 items-center justify-center gap-3 rounded-md bg-white px-5 text-sm font-semibold text-ink shadow-lg shadow-black/20 transition-colors hover:bg-saffron-soft"
+                >
+                  <WhatsAppIcon className="size-5 text-whatsapp" />
+                  Scan to Book Now
+                </a>
+
+                <p className="text-xs text-white/58">
+                  {CITIES.map((c, i) => (
+                    <span key={c}>
+                      <span>{c}</span>
+                      {i < CITIES.length - 1 ? <span className="mx-1.5 text-white/25">/</span> : null}
+                    </span>
+                  ))}
+                </p>
+              </motion.div>
             </div>
+
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeUp}
+              transition={{ duration: 0.7, delay: 0.45 }}
+              className="justify-self-start lg:justify-self-end"
+            >
+              <div className="rounded-md border border-white/18 bg-white p-3 shadow-2xl shadow-black/25">
+                {/* Plain <img> — no next/image per project rules */}
+                <img
+                  src={QR_URL}
+                  alt="WhatsApp QR code - scan to book on DoneDanaDone"
+                  className="block size-[220px] rounded"
+                  width={220}
+                  height={220}
+                />
+              </div>
+              <p className="mt-3 text-center text-xs text-white/70">WhatsApp booking entry</p>
+            </motion.div>
           </div>
-
-          <a
-            href={WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-3 rounded-full bg-whatsapp px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-whatsapp/20 transition-transform hover:scale-[1.02]"
-          >
-            <WhatsAppIcon className="size-5" />
-            Scan to Book Now
-          </a>
-
-          <p className="text-xs text-muted">
-            Available in{' '}
-            {CITIES.map((c, i) => (
-              <span key={c}>
-                <span className="text-white/80">{c}</span>
-                {i < CITIES.length - 1 ? <span className="mx-1.5 text-white/30">·</span> : null}
-              </span>
-            ))}
-          </p>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

@@ -56,31 +56,31 @@ export default async function ProvidersPage() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
   return (
-    <main className="min-h-screen px-6 py-8">
+    <main className="min-h-screen bg-background px-3 py-6 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+        <header className="flow-wash flex flex-wrap items-center justify-between gap-4 rounded-md px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
           <div>
-            <h1 className="text-2xl font-semibold">DoneDanaDone — Providers</h1>
-            <p className="text-muted text-sm">
-              Set up the professionals once — bookings are matched & assigned automatically.
+            <h1 className="text-2xl font-semibold">DoneDanaDone - Providers</h1>
+            <p className="text-sm text-white/70">
+              Set up the professionals once - bookings are matched and assigned automatically.
             </p>
           </div>
           <nav className="flex items-center gap-2 text-sm">
             <Link
               href="/admin"
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-muted hover:text-white"
+              className="rounded-md border border-white/20 px-3 py-1.5 text-white/70 hover:text-white"
             >
               Bookings
             </Link>
-            <span className="rounded-lg bg-saffron px-3 py-1.5 font-medium text-ink">
+            <span className="rounded-md bg-white px-3 py-1.5 font-medium text-ink">
               Providers
             </span>
           </nav>
         </header>
 
         {showingSample && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <span className="inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide">
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-[#ead8bd] bg-[#fff6e7] px-4 py-3 text-sm text-[#7a5418]">
+            <span className="inline-flex rounded-md bg-[#f7d7a3] px-2 py-0.5 text-xs font-semibold uppercase">
               Sample data
             </span>
             {backendReady

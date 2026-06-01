@@ -40,7 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${outfit.variable} ${dmSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground font-body">
+      <body className="flex min-h-full flex-col bg-background text-text font-body">
         {children}
       </body>
     </html>

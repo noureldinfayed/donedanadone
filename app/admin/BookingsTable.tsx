@@ -53,19 +53,19 @@ function serviceLabel(service: string | null) {
 function statusClass(status: string) {
   switch (status) {
     case 'pending':
-      return 'bg-zinc-700 text-zinc-100'
+      return 'bg-zinc-100 text-zinc-700 ring-1 ring-zinc-300'
     case 'confirmed':
-      return 'bg-blue-500/20 text-blue-200 ring-1 ring-blue-400/30'
+      return 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
     case 'provider_confirmed':
-      return 'bg-green-500/20 text-green-200 ring-1 ring-green-400/30'
+      return 'bg-green-50 text-green-700 ring-1 ring-green-200'
     case 'completed':
-      return 'bg-emerald-800 text-emerald-50'
+      return 'bg-emerald-900 text-emerald-50'
     case 'cancelled':
-      return 'bg-red-500/20 text-red-200 ring-1 ring-red-400/30'
+      return 'bg-red-50 text-red-700 ring-1 ring-red-200'
     case 'needs_manual_assignment':
-      return 'animate-pulse bg-orange-500/25 text-orange-100 ring-1 ring-orange-300/40'
+      return 'animate-pulse bg-orange-100 text-orange-800 ring-1 ring-orange-300'
     default:
-      return 'bg-zinc-800 text-zinc-200'
+      return 'bg-zinc-100 text-zinc-700 ring-1 ring-zinc-300'
   }
 }
 
@@ -73,14 +73,14 @@ function paymentClass(status: string) {
   switch (status) {
     case 'success':
     case 'paid':
-      return 'bg-green-500/20 text-green-200 ring-1 ring-green-400/30'
+      return 'bg-green-50 text-green-700 ring-1 ring-green-200'
     case 'failed':
-      return 'bg-red-500/20 text-red-200 ring-1 ring-red-400/30'
+      return 'bg-red-50 text-red-700 ring-1 ring-red-200'
     case 'refunded':
-      return 'bg-blue-500/20 text-blue-200 ring-1 ring-blue-400/30'
+      return 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
     case 'pending':
     default:
-      return 'bg-yellow-500/20 text-yellow-100 ring-1 ring-yellow-400/30'
+      return 'bg-yellow-50 text-yellow-800 ring-1 ring-yellow-200'
   }
 }
 
@@ -296,7 +296,7 @@ export default function BookingsTable({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-white/15 p-10 text-center text-muted">
+      <div className="rounded-md border border-dashed border-[#cfd4dc] bg-white p-10 text-center text-muted">
         No bookings yet. When a customer messages your WhatsApp number, they will show up here in real time.
       </div>
     )
@@ -304,17 +304,17 @@ export default function BookingsTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-white/10 bg-ink-soft p-3">
+      <div className="rounded-md border border-[#dfe3e8] bg-white p-3 shadow-sm">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           <label className="space-y-1 text-xs text-muted">
             <span>Order ID</span>
-            <div className="flex items-center gap-2 rounded-md border border-white/10 bg-black/30 px-2">
+            <div className="flex items-center gap-2 rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-2">
               <Search className="size-4 text-muted" />
               <input
                 value={orderFilter}
                 onChange={(event) => setOrderFilter(event.target.value)}
                 placeholder="DDD-YYYYMMDD-XXXX"
-                className="min-w-0 flex-1 bg-transparent py-2 text-sm text-white outline-none placeholder:text-white/30"
+                className="min-w-0 flex-1 bg-transparent py-2 text-sm text-ink outline-none placeholder:text-muted/60"
               />
             </div>
           </label>
@@ -325,7 +325,7 @@ export default function BookingsTable({
               value={nameFilter}
               onChange={(event) => setNameFilter(event.target.value)}
               placeholder="Partial name"
-              className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30"
+              className="w-full rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-sm text-ink outline-none placeholder:text-muted/60"
             />
           </label>
 
@@ -334,7 +334,7 @@ export default function BookingsTable({
             <select
               value={cityFilter}
               onChange={(event) => setCityFilter(event.target.value)}
-              className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+              className="w-full rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-sm text-ink outline-none"
             >
               <option value="all">All Cities</option>
               {CITIES.map((city) => (
@@ -350,7 +350,7 @@ export default function BookingsTable({
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+              className="w-full rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-sm text-ink outline-none"
             >
               <option value="all">All</option>
               {STATUSES.map((status) => (
@@ -367,7 +367,7 @@ export default function BookingsTable({
               type="date"
               value={fromDate}
               onChange={(event) => setFromDate(event.target.value)}
-              className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+              className="w-full rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-sm text-ink outline-none"
             />
           </label>
 
@@ -378,12 +378,12 @@ export default function BookingsTable({
                 type="date"
                 value={toDate}
                 onChange={(event) => setToDate(event.target.value)}
-                className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none"
+                className="min-w-0 flex-1 rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-sm text-ink outline-none"
               />
               <button
                 type="button"
                 onClick={clearFilters}
-                className="inline-flex size-10 items-center justify-center rounded-md border border-white/10 text-muted hover:border-saffron/50 hover:text-saffron"
+                className="inline-flex size-10 items-center justify-center rounded-md border border-[#d8dde4] text-muted hover:border-ink hover:text-ink"
                 title="Clear filters"
                 aria-label="Clear filters"
               >
@@ -405,9 +405,9 @@ export default function BookingsTable({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-white/10 bg-ink-soft">
+      <div className="overflow-x-auto rounded-md border border-[#dfe3e8] bg-white shadow-sm">
         <table className="w-full min-w-[1180px] text-sm">
-          <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted">
+          <thead className="bg-[#f3f5f8] text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-4 py-3">Order ID</th>
               <th className="px-4 py-3">Customer Name</th>
@@ -425,8 +425,8 @@ export default function BookingsTable({
             {filteredRows.map((booking) => {
               const provider = booking.provider_id ? providerById.get(booking.provider_id) : null
               return (
-                <tr key={booking.id} className="border-t border-white/5 align-top">
-                  <td className="px-4 py-3 font-mono text-xs text-white">{orderId(booking)}</td>
+                <tr key={booking.id} className="border-t border-[#edf0f4] align-top text-ink">
+                  <td className="px-4 py-3 font-mono text-xs text-ink">{orderId(booking)}</td>
                   <td className="px-4 py-3">{booking.user_name ?? '-'}</td>
                   <td className="px-4 py-3 font-mono text-xs">
                     {booking.user_phone.replace(/^whatsapp:/, '')}
@@ -443,7 +443,7 @@ export default function BookingsTable({
                         <button
                           type="button"
                           onClick={() => setProviderModal(provider)}
-                          className="text-left font-medium text-blue-300 underline-offset-4 hover:text-blue-200 hover:underline"
+                          className="text-left font-medium text-blue-700 underline-offset-4 hover:text-blue-900 hover:underline"
                         >
                           {provider.name}
                         </button>
@@ -455,7 +455,7 @@ export default function BookingsTable({
                       <button
                         type="button"
                         onClick={() => openReassign(booking)}
-                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-white/10 text-muted hover:border-saffron/50 hover:text-saffron"
+                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-[#d8dde4] text-muted hover:border-ink hover:text-ink"
                         title="Reassign provider"
                         aria-label={`Reassign provider for ${orderId(booking)}`}
                       >
@@ -545,21 +545,21 @@ function ProviderModal({
   const upcoming = groupBookings(bookings.filter((booking) => booking.status !== 'completed' && booking.status !== 'cancelled'))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/70 p-3 sm:items-center sm:justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`${provider.name} details`}
-        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-lg border border-white/10 bg-ink p-5 shadow-2xl"
+        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-md border border-[#dfe3e8] bg-white p-5 text-ink shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <ModalHeader title={provider.name} subtitle={provider.profession ?? 'Provider'} onClose={onClose} />
 
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr_1.2fr]">
-          <section className="rounded-lg border border-white/10 bg-white/5 p-4">
+          <section className="rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-white">{provider.name}</h3>
+                <h3 className="font-semibold text-ink">{provider.name}</h3>
                 <p className="text-sm text-muted">{provider.profession ?? '-'}</p>
               </div>
               <label className="flex items-center gap-2 text-sm text-muted">
@@ -568,7 +568,7 @@ function ProviderModal({
                   checked={provider.active}
                   disabled={!canPersist || busy}
                   onChange={(event) => onToggle(event.target.checked)}
-                  className="size-4 accent-saffron"
+                  className="size-4 accent-ink"
                 />
                 {provider.active ? 'Active' : 'Inactive'}
               </label>
@@ -581,8 +581,8 @@ function ProviderModal({
             </dl>
           </section>
 
-          <section className="rounded-lg border border-white/10 bg-white/5 p-4">
-            <h3 className="font-semibold text-white">Working Days & Hours</h3>
+          <section className="rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
+            <h3 className="font-semibold text-ink">Working Days & Hours</h3>
             <p className="mt-2 text-sm text-muted">
               {provider.working_days.map((day) => WEEKDAY[day]).join(', ') || '-'}
             </p>
@@ -590,19 +590,19 @@ function ProviderModal({
               {provider.start_time} - {provider.end_time}
             </p>
 
-            <h3 className="mt-5 font-semibold text-white">Ratings</h3>
+            <h3 className="mt-5 font-semibold text-ink">Ratings</h3>
             <p className="mt-2 text-sm text-muted">All-time average: {provider.rating.toFixed(1)}</p>
             <p className="text-sm text-muted">Last 5 ratings: no detailed rating rows yet.</p>
           </section>
         </div>
 
-        <section className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-          <h3 className="font-semibold text-white">Today&apos;s Bookings</h3>
+        <section className="mt-4 rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
+          <h3 className="font-semibold text-ink">Today&apos;s Bookings</h3>
           <BookingList bookings={todayBookings} empty="No bookings today." />
         </section>
 
-        <section className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-          <h3 className="font-semibold text-white">Upcoming Bookings</h3>
+        <section className="mt-4 rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
+          <h3 className="font-semibold text-ink">Upcoming Bookings</h3>
           {upcoming.length === 0 ? (
             <p className="mt-2 text-sm text-muted">No upcoming bookings.</p>
           ) : (
@@ -619,7 +619,7 @@ function ProviderModal({
           )}
         </section>
 
-        {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </div>
     </div>
   )
@@ -627,17 +627,17 @@ function ProviderModal({
 
 function PaymentModal({ booking, onClose }: { booking: Booking; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/70 p-3 sm:items-center sm:justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`Payment for ${orderId(booking)}`}
-        className="w-full max-w-lg rounded-lg border border-white/10 bg-ink p-5 shadow-2xl"
+        className="w-full max-w-lg rounded-md border border-[#dfe3e8] bg-white p-5 text-ink shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <ModalHeader title="Payment" subtitle={`Order #${orderId(booking)}`} onClose={onClose} />
-        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-          <div className="mb-4 flex items-center gap-2 text-saffron">
+        <div className="mt-4 rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
+          <div className="mb-4 flex items-center gap-2 text-ink">
             <CreditCard className="size-5" />
             <span className="font-semibold">Transaction Details</span>
           </div>
@@ -677,12 +677,12 @@ function ReassignModal({
   onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/70 p-3 sm:items-center sm:justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 sm:items-center sm:justify-center" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`Reassign provider for ${orderId(booking)}`}
-        className="w-full max-w-lg rounded-lg border border-white/10 bg-ink p-5 shadow-2xl"
+        className="w-full max-w-lg rounded-md border border-[#dfe3e8] bg-white p-5 text-ink shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <ModalHeader title="Reassign Provider" subtitle={`Order #${orderId(booking)}`} onClose={onClose} />
@@ -692,7 +692,7 @@ function ReassignModal({
             <select
               value={selectedProvider}
               onChange={(event) => onSelect(event.target.value)}
-              className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-white outline-none"
+              className="w-full rounded-md border border-[#d8dde4] bg-[#f8f9fb] px-3 py-2 text-ink outline-none"
             >
               {providers.length === 0 && <option value="">No matching active providers</option>}
               {providers.map((provider) => (
@@ -703,14 +703,14 @@ function ReassignModal({
             </select>
           </label>
           {!canPersist && (
-            <p className="text-sm text-yellow-200">Connect live Supabase data to reassign bookings.</p>
+            <p className="text-sm text-yellow-700">Connect live Supabase data to reassign bookings.</p>
           )}
-          {error && <p className="text-sm text-red-300">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-white/10 px-4 py-2 text-sm text-muted hover:text-white"
+              className="rounded-md border border-[#d8dde4] px-4 py-2 text-sm text-muted hover:text-ink"
             >
               Cancel
             </button>
@@ -718,7 +718,7 @@ function ReassignModal({
               type="button"
               onClick={onConfirm}
               disabled={!canPersist || !selectedProvider || busy}
-              className="rounded-md bg-saffron px-4 py-2 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? 'Reassigning...' : 'Confirm'}
             </button>
@@ -741,13 +741,13 @@ function ModalHeader({
   return (
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h2 className="text-xl font-semibold text-white">{title}</h2>
+        <h2 className="text-xl font-semibold text-ink">{title}</h2>
         {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
       </div>
       <button
         type="button"
         onClick={onClose}
-        className="inline-flex size-9 items-center justify-center rounded-md border border-white/10 text-muted hover:border-saffron/50 hover:text-saffron"
+        className="inline-flex size-9 items-center justify-center rounded-md border border-[#d8dde4] text-muted hover:border-ink hover:text-ink"
         title="Close"
         aria-label="Close"
       >
@@ -761,7 +761,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-[140px_1fr] gap-3">
       <dt className="text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-white">{value}</dd>
+      <dd className="min-w-0 break-words text-ink">{value}</dd>
     </div>
   )
 }
@@ -771,11 +771,11 @@ function BookingList({ bookings, empty }: { bookings: Booking[]; empty: string }
     return empty ? <p className="mt-2 text-sm text-muted">{empty}</p> : null
   }
   return (
-    <ul className="mt-2 divide-y divide-white/10">
+    <ul className="mt-2 divide-y divide-[#dfe3e8]">
       {bookings.map((booking) => (
         <li key={booking.id} className="py-2 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-mono text-xs text-white">{orderId(booking)}</span>
+            <span className="font-mono text-xs text-ink">{orderId(booking)}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(booking.status)}`}>
               {booking.status}
             </span>
