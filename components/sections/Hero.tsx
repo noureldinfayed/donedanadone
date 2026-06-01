@@ -21,7 +21,7 @@ export default function Hero() {
       id="top"
       className="relative flex min-h-[82vh] items-center bg-background px-3 py-8 sm:px-6 sm:py-12"
     >
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="mx-auto w-full max-w-[1900px]">
         <div className="relative min-h-[620px] rounded-md bg-ink text-white shadow-2xl shadow-black/15">
           <div className="absolute inset-x-0 bottom-0 h-24 flow-wash" />
           <div className="absolute inset-y-0 right-0 w-full flow-wash-soft opacity-50 sm:w-1/2" />
@@ -94,7 +94,7 @@ export default function Hero() {
               animate="visible"
               variants={fadeUp}
               transition={{ duration: 0.7, delay: 0.45 }}
-              className="justify-self-start lg:justify-self-end"
+              className="flex w-full flex-col items-center justify-self-center lg:w-auto lg:justify-self-end"
             >
               <div className="rounded-md border border-white/18 bg-white p-3 shadow-2xl shadow-black/25">
                 {/* Plain <img> — no next/image per project rules */}

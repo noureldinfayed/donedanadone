@@ -46,7 +46,7 @@ export default function Services() {
       id="services"
       className="relative bg-background px-3 py-10 sm:px-6 sm:py-14"
     >
-      <div className="mx-auto max-w-7xl flow-panel rounded-md">
+      <div className="mx-auto max-w-[1900px] flow-panel rounded-md">
         <div className="flow-wash flex h-20 items-center justify-between rounded-t-md px-6 text-white sm:px-8">
           <span className="flex size-8 items-center justify-center rounded-full bg-white text-sm font-black text-ink">
             D

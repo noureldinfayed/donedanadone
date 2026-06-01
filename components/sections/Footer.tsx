@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="bg-background px-3 pb-6 pt-10 sm:px-6">
-      <div className="flow-wash mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 rounded-md px-6 py-8 text-sm text-white shadow-xl shadow-black/10 sm:flex-row">
+      <div className="flow-wash mx-auto flex max-w-[1900px] flex-col items-center justify-between gap-4 rounded-md px-6 py-8 text-sm text-white shadow-xl shadow-black/10 sm:flex-row">
         <p className="font-display text-base font-semibold">DoneDanaDone</p>
 
         <p className="text-xs text-white/70">

@@ -17,7 +17,7 @@ export default function Stats() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.6 }}
-        className="flow-wash mx-auto grid max-w-7xl grid-cols-1 gap-6 rounded-md p-8 text-center text-white shadow-xl shadow-black/10 sm:grid-cols-3 sm:p-12"
+        className="flow-wash mx-auto grid max-w-[1900px] grid-cols-1 gap-6 rounded-md p-8 text-center text-white shadow-xl shadow-black/10 sm:grid-cols-3 sm:p-12"
       >
         {STATS.map((s) => (
           <div key={s.label} className="rounded-md border border-white/10 bg-black/25 p-5">
