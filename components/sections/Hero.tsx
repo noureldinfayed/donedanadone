@@ -33,7 +33,7 @@ export default function Hero() {
                 animate="visible"
                 variants={fadeUp}
                 transition={{ duration: 0.6, delay: 0 }}
-                className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white"
+                className="mx-auto mb-8 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white lg:mx-0"
               >
                 <span className="size-1.5 rounded-full bg-whatsapp" />
                 AI booking workflow live in India
@@ -66,7 +66,7 @@ export default function Hero() {
                 animate="visible"
                 variants={fadeUp}
                 transition={{ duration: 0.7, delay: 0.35 }}
-                className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center"
+                className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-start"
               >
                 <a
                   href={WHATSAPP_LINK}
@@ -78,7 +78,7 @@ export default function Hero() {
                   Scan to Book Now
                 </a>
 
-                <p className="text-xs text-white/58">
+                <p className="text-center text-xs text-white/58 sm:text-left">
                   {CITIES.map((c, i) => (
                     <span key={c}>
                       <span>{c}</span>
