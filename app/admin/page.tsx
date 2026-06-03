@@ -65,10 +65,10 @@ export default async function AdminPage() {
   return (
     <main className="min-h-screen bg-background px-3 py-6 sm:px-6">
       <div className="mx-auto max-w-[1900px] space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-white/10 bg-ink px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
+        <header className="flow-wash flex flex-wrap items-center justify-between gap-4 rounded-md px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
           <div>
-            <h1 className="text-2xl font-semibold">DoneDanaDone - Bookings</h1>
-            <p className="mt-1 max-w-xl text-sm leading-6 text-white/80">
+            <h1 className="text-2xl font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">DoneDanaDone - Bookings</h1>
+            <p className="mt-1 max-w-xl text-sm font-medium leading-6 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
               Live view of incoming WhatsApp bookings — providers auto-assigned.
             </p>
           </div>
@@ -79,12 +79,12 @@ export default async function AdminPage() {
               </span>
               <Link
                 href="/admin/providers"
-                className="rounded-md border border-white/20 px-3 py-1.5 text-white/70 hover:text-white"
+                className="rounded-md border border-white/30 bg-white/10 px-3 py-1.5 font-medium text-white hover:bg-white/15"
               >
                 Providers
               </Link>
             </nav>
-            <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-2.5 py-1.5 text-xs text-white/80">
+            <div className="flex items-center gap-2 rounded-md border border-white/30 bg-white/15 px-2.5 py-1.5 text-xs font-medium text-white">
               <span className="size-2 rounded-full bg-green-500 animate-pulse" />
               realtime
             </div>

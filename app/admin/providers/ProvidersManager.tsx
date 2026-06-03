@@ -69,20 +69,23 @@ function minutesOf(slotTime: string | null): number {
   return parseAllTimes(slotTime)[0] ?? 0
 }
 
-function toMin(hhmm: string): number {
-  const [h, m] = hhmm.split(':').map((n) => parseInt(n, 10))
-  return (h || 0) * 60 + (m || 0)
-}
-
 function jobStatusClass(status: string): string {
   switch (status) {
     case 'pending':
-      return 'border-amber-400/40 bg-amber-400/15 text-amber-200'
+      return 'border-amber-200 bg-amber-50 text-amber-800'
     case 'cancelled':
-      return 'border-red-400/40 bg-red-400/10 text-red-200'
-    default: // assigned / confirmed
-      return 'border-saffron/40 bg-saffron/15 text-saffron'
+      return 'border-red-200 bg-red-50 text-red-700'
+    case 'provider_confirmed':
+    case 'confirmed':
+    case 'completed':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+    default:
+      return 'border-blue-200 bg-blue-50 text-blue-700'
   }
+}
+
+function bookingOrderId(booking: Booking): string {
+  return booking.booking_display_id ?? booking.id.slice(0, 8).toUpperCase()
 }
 
 interface Props {
@@ -309,13 +312,6 @@ function ProviderCard({
   )
 }
 
-// ─── Live weekly calendar for one provider ────────────────────────────────────
-// A real hour-axis grid: availability is shaded, jobs sit at their actual time,
-// today is highlighted with a live "now" line, and ASAP/out-of-window jobs are
-// surfaced separately so nothing is silently dropped.
-const HOUR_H = 44 // px per hour
-const DEFAULT_JOB_MINS = 90
-
 function ProviderCalendar({
   provider,
   bookings,
@@ -330,279 +326,126 @@ function ProviderCalendar({
   const workingSet = new Set(provider.working_days)
   const todayWd = new Date().getDay()
 
-  // Build the visible time window from the provider's hours, padded to whole
-  // hours and widened to fit any job that starts/ends outside it.
-  const { gridStart, gridEnd, hours } = useMemo(() => {
-    let lo = toMin(provider.start_time)
-    let hi = toMin(provider.end_time)
-    for (const b of bookings) {
-      const ts = parseAllTimes(b.slot_time)
-      for (const t of ts) {
-        lo = Math.min(lo, t)
-        hi = Math.max(hi, t + 30)
-      }
-    }
-    const gridStart = Math.floor(lo / 60) * 60
-    const gridEnd = Math.max(gridStart + 60, Math.ceil(hi / 60) * 60)
-    const hours: number[] = []
-    for (let h = gridStart; h <= gridEnd; h += 60) hours.push(h)
-    return { gridStart, gridEnd, hours }
-  }, [provider.start_time, provider.end_time, bookings])
-
-  const span = gridEnd - gridStart
-  const gridH = (span / 60) * HOUR_H
-
-  // Split jobs per weekday into positioned (have a time) and unscheduled (ASAP).
   const byDay = useMemo(() => {
-    const map = new Map<number, { positioned: Booking[]; unscheduled: Booking[] }>()
-    for (const d of WEEK) map.set(d.day, { positioned: [], unscheduled: [] })
+    const map = new Map<number, Booking[]>()
+    for (const d of WEEK) map.set(d.day, [])
     for (const b of bookings) {
       const wd = slotWeekday(b.slot_date)
       const bucket = map.get(wd)
       if (!bucket) continue
-      if (parseAllTimes(b.slot_time).length) bucket.positioned.push(b)
-      else bucket.unscheduled.push(b)
+      bucket.push(b)
+    }
+    for (const [, items] of map) {
+      items.sort((a, b) => {
+        const aTimes = parseAllTimes(a.slot_time)
+        const bTimes = parseAllTimes(b.slot_time)
+        const aMin = aTimes.length ? minutesOf(a.slot_time) : 24 * 60
+        const bMin = bTimes.length ? minutesOf(b.slot_time) : 24 * 60
+        return aMin - bMin
+      })
     }
     return map
   }, [bookings])
 
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes()
-  const showNow = nowMin >= gridStart && nowMin <= gridEnd
-  const availTop = ((toMin(provider.start_time) - gridStart) / span) * gridH
-  const availH = ((toMin(provider.end_time) - toMin(provider.start_time)) / span) * gridH
+  const todayJobs = byDay.get(todayWd) ?? []
+  const workingDays = WEEK.filter((day) => workingSet.has(day.day))
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-ink sm:flex sm:items-center sm:justify-center sm:bg-black/70 sm:p-4 sm:backdrop-blur-sm"
+      className="fixed inset-0 z-50 bg-black/45 sm:flex sm:items-center sm:justify-center sm:p-4 sm:backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="h-[100dvh] w-full overflow-y-auto bg-ink p-4 sm:h-auto sm:max-h-[88vh] sm:max-w-5xl sm:rounded-2xl sm:border sm:border-white/10 sm:p-6"
+        className="h-[100dvh] w-full overflow-y-auto bg-[#f8f9fb] text-ink shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-6xl sm:rounded-xl sm:border sm:border-[#dfe3e8]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <h3 className="font-display text-xl font-semibold text-white">
-              {provider.name}{' '}
-              <span className="text-sm font-normal text-muted">· weekly schedule</span>
-            </h3>
-            <p className="mt-1 text-sm text-muted">
-              {fmtHour(provider.start_time)} – {fmtHour(provider.end_time)} ·{' '}
-              {bookings.length} assigned job{bookings.length === 1 ? '' : 's'}
-              {live && (
-                <span className="ml-2 inline-flex items-center gap-1.5 text-xs">
-                  <span className="size-2 rounded-full bg-green-500 animate-pulse" /> live
-                </span>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-muted hover:text-white"
-          >
-            Close
-          </button>
-        </div>
-
-        {/* Legend */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-whatsapp/15 ring-1 ring-whatsapp/30" /> Available
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-saffron/40" /> Assigned
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm bg-amber-400/40" /> Pending
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-3 rounded-sm border-t-2 border-red-500" /> Now
-          </span>
-        </div>
-
-        <div className="space-y-3 sm:hidden">
-          {WEEK.map((d) => {
-            const on = workingSet.has(d.day)
-            const isToday = d.day === todayWd
-            const bucket = byDay.get(d.day) ?? { positioned: [], unscheduled: [] }
-            const jobs = [...bucket.unscheduled, ...bucket.positioned]
-            return (
-              <section
-                key={d.day}
-                className={`rounded-xl border p-3 ${
-                  isToday
-                    ? 'border-saffron/45 bg-saffron/10'
-                    : on
-                      ? 'border-white/10 bg-ink-soft'
-                      : 'border-white/5 bg-white/[0.025]'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className={`font-semibold ${isToday ? 'text-saffron' : 'text-white'}`}>
-                      {d.full}
-                    </h4>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {on ? `${fmtHour(provider.start_time)} - ${fmtHour(provider.end_time)}` : 'Off'}
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-muted">
-                    {jobs.length} job{jobs.length === 1 ? '' : 's'}
+        <div className="border-b border-[#dfe3e8] bg-white px-4 py-4 sm:px-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h3 className="font-display text-xl font-semibold text-ink">
+                {provider.name}
+                <span className="block text-sm font-normal text-muted sm:inline"> · weekly schedule</span>
+              </h3>
+              <p className="mt-1 text-sm text-muted">
+                {fmtHour(provider.start_time)} - {fmtHour(provider.end_time)}
+                {live && (
+                  <span className="ml-2 inline-flex items-center gap-1.5 text-xs">
+                    <span className="size-2 rounded-full bg-green-500 animate-pulse" /> live
                   </span>
-                </div>
-
-                {jobs.length > 0 ? (
-                  <div className="mt-3 space-y-2">
-                    {bucket.unscheduled.map((booking) => (
-                      <MobileCalendarJob key={booking.id} booking={booking} label="ASAP" />
-                    ))}
-                    {bucket.positioned.map((booking) => (
-                      <MobileCalendarJob
-                        key={booking.id}
-                        booking={booking}
-                        label={booking.slot_time ?? 'Scheduled'}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-3 rounded-lg border border-white/5 bg-white/[0.025] px-3 py-2 text-xs text-muted">
-                    No assigned jobs.
-                  </p>
                 )}
-              </section>
-            )
-          })}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-[#d8dde4] px-3 py-1.5 text-sm text-muted hover:border-ink hover:text-ink"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <CalendarMetric label="Assigned Jobs" value={String(bookings.length)} />
+            <CalendarMetric label="Working Days" value={String(workingDays.length)} />
+            <CalendarMetric label="Today" value={`${todayJobs.length} job${todayJobs.length === 1 ? '' : 's'}`} />
+          </div>
         </div>
 
-        <div className="hidden min-w-[640px] sm:block">
-          {/* Day headers */}
-          <div className="grid grid-cols-[44px_repeat(7,1fr)] gap-1">
-            <div />
-            {WEEK.map((d) => {
-              const isToday = d.day === todayWd
-              const count = byDay.get(d.day)
-              const total = (count?.positioned.length ?? 0) + (count?.unscheduled.length ?? 0)
+        <div className="p-4 sm:p-6">
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700">
+              Available
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-blue-700">
+              Assigned
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-800">
+              Pending
+            </span>
+          </div>
+
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-3">
+            {WEEK.map((day) => {
+              const on = workingSet.has(day.day)
+              const isToday = day.day === todayWd
+              const jobs = byDay.get(day.day) ?? []
               return (
-                <div
-                  key={d.day}
-                  className={`rounded-t-lg px-1 py-1.5 text-center ${
-                    isToday ? 'bg-saffron/15' : ''
+                <section
+                  key={day.day}
+                  className={`flex min-h-[220px] flex-col rounded-xl border bg-white p-4 shadow-sm ${
+                    isToday ? 'border-saffron ring-2 ring-saffron/25' : 'border-[#dfe3e8]'
                   }`}
                 >
-                  <p
-                    className={`text-xs font-semibold ${
-                      isToday ? 'text-saffron' : workingSet.has(d.day) ? 'text-white' : 'text-white/30'
-                    }`}
-                  >
-                    {d.full}
-                  </p>
-                  <p className="text-[10px] text-muted">{total > 0 ? `${total} job${total === 1 ? '' : 's'}` : '—'}</p>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Grid body */}
-          <div className="grid grid-cols-[44px_repeat(7,1fr)] gap-1">
-            {/* Hour axis */}
-            <div className="relative" style={{ height: gridH }}>
-              {hours.map((h) => (
-                <div
-                  key={h}
-                  className="absolute right-1 -translate-y-1/2 text-[10px] text-muted"
-                  style={{ top: ((h - gridStart) / span) * gridH }}
-                >
-                  {fmtHour(`${String(Math.floor(h / 60)).padStart(2, '0')}:00`)}
-                </div>
-              ))}
-            </div>
-
-            {/* Day columns */}
-            {WEEK.map((d) => {
-              const on = workingSet.has(d.day)
-              const isToday = d.day === todayWd
-              const bucket = byDay.get(d.day) ?? { positioned: [], unscheduled: [] }
-              return (
-                <div
-                  key={d.day}
-                  className={`relative rounded-lg border ${
-                    on ? 'border-white/10 bg-ink-soft' : 'border-white/5 bg-white/[0.015]'
-                  } ${isToday ? 'ring-1 ring-saffron/40' : ''}`}
-                  style={{ height: gridH }}
-                >
-                  {/* Hour gridlines */}
-                  {hours.slice(1).map((h) => (
-                    <div
-                      key={h}
-                      className="absolute inset-x-0 border-t border-white/[0.06]"
-                      style={{ top: ((h - gridStart) / span) * gridH }}
-                    />
-                  ))}
-
-                  {/* Availability band */}
-                  {on && availH > 0 && (
-                    <div
-                      className="absolute inset-x-0 bg-whatsapp/[0.07] ring-1 ring-inset ring-whatsapp/20"
-                      style={{ top: availTop, height: availH }}
-                    />
-                  )}
-
-                  {/* Now line (today only) */}
-                  {isToday && showNow && (
-                    <div
-                      className="absolute inset-x-0 z-20 border-t-2 border-red-500"
-                      style={{ top: ((nowMin - gridStart) / span) * gridH }}
-                    >
-                      <span className="absolute -left-1 -top-1 size-2 rounded-full bg-red-500" />
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="font-display text-lg font-semibold text-ink">{day.full}</h4>
+                      <p className="mt-1 text-xs text-muted">
+                        {on ? `${fmtHour(provider.start_time)} - ${fmtHour(provider.end_time)}` : 'Off day'}
+                      </p>
                     </div>
-                  )}
-
-                  {/* Unscheduled / ASAP jobs pinned at the top */}
-                  {bucket.unscheduled.map((b, i) => (
-                    <div
-                      key={b.id}
-                      className="absolute inset-x-0.5 z-10 rounded-md border border-dashed border-saffron/50 bg-saffron/10 px-1 py-0.5 text-[10px] leading-tight text-saffron"
-                      style={{ top: 2 + i * 30 }}
-                      title={`${b.user_name ?? 'Customer'} · ${b.slot_time ?? 'ASAP'}`}
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        on
+                          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                          : 'bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200'
+                      }`}
                     >
-                      <span className="font-semibold">ASAP</span>{' '}
-                      {b.service_type ? SERVICE_EMOJI[b.service_type] ?? '' : ''}
-                    </div>
-                  ))}
+                      {jobs.length} job{jobs.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
 
-                  {/* Positioned job blocks */}
-                  {bucket.positioned.map((b) => {
-                    const times = parseAllTimes(b.slot_time)
-                    const s = times[0]
-                    const e = times[1] ?? s + DEFAULT_JOB_MINS
-                    const top = ((s - gridStart) / span) * gridH
-                    const height = Math.max(26, ((e - s) / span) * gridH)
-                    return (
-                      <div
-                        key={b.id}
-                        className={`absolute inset-x-0.5 z-10 overflow-hidden rounded-md border px-1 py-0.5 text-[10px] leading-tight ${jobStatusClass(
-                          b.status
-                        )}`}
-                        style={{ top, height }}
-                        title={`${b.slot_time ?? ''} · ${b.user_name ?? 'Customer'} · ${
-                          b.area ?? ''
-                        }`}
-                      >
-                        <p className="truncate font-semibold">{b.slot_time ?? '—'}</p>
-                        <p className="truncate text-white">
-                          {b.service_type ? SERVICE_EMOJI[b.service_type] ?? '' : ''}{' '}
-                          {b.user_name ?? 'Customer'}
-                        </p>
+                  <div className="mt-4 flex flex-1 flex-col gap-2">
+                    {jobs.length > 0 ? (
+                      jobs.map((booking) => (
+                        <CalendarBookingCard key={booking.id} booking={booking} />
+                      ))
+                    ) : (
+                      <div className="flex flex-1 items-center rounded-lg border border-dashed border-[#d8dde4] bg-[#f8f9fb] px-3 py-4 text-sm text-muted">
+                        No assigned bookings.
                       </div>
-                    )
-                  })}
-
-                  {!on && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[10px] uppercase tracking-wide text-white/20">Off</span>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </section>
               )
             })}
           </div>
@@ -612,20 +455,37 @@ function ProviderCalendar({
   )
 }
 
-function MobileCalendarJob({ booking, label }: { booking: Booking; label: string }) {
-  const service = booking.service_type
+function CalendarMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className={`rounded-lg border px-3 py-2 text-xs ${jobStatusClass(booking.status)}`}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold">{label}</span>
-        <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px]">
+    <div className="rounded-lg border border-[#dfe3e8] bg-[#f8f9fb] px-3 py-2">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-1 font-semibold text-ink">{value}</p>
+    </div>
+  )
+}
+
+function CalendarBookingCard({ booking }: { booking: Booking }) {
+  const service = booking.service_type
+  const time = booking.slot_time ?? 'ASAP'
+
+  return (
+    <div className={`rounded-lg border px-3 py-2.5 text-sm ${jobStatusClass(booking.status)}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-mono text-[11px] font-semibold opacity-80">{bookingOrderId(booking)}</p>
+          <p className="mt-1 font-semibold">{time}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-medium ring-1 ring-black/5">
           {booking.status}
         </span>
       </div>
-      <p className="mt-1 text-white">
+      <p className="mt-2 text-ink">
         {service ? SERVICE_EMOJI[service] ?? '' : ''} {booking.user_name ?? 'Customer'}
       </p>
-      <p className="mt-0.5 text-white/60">{booking.area ?? 'Area not set'}</p>
+      <p className="mt-0.5 text-xs text-muted">{SERVICE_LABEL[service ?? ''] ?? service ?? 'Service'}</p>
+      <p className="mt-1 line-clamp-2 text-xs opacity-80">
+        {booking.address || booking.area || 'Address not set'}
+      </p>
     </div>
   )
 }

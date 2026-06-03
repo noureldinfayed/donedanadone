@@ -409,7 +409,7 @@ export default function BookingsTable({
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-4">
         {filteredRows.map((booking) => {
           const provider = booking.provider_id ? providerById.get(booking.provider_id) : null
           return (
@@ -557,8 +557,8 @@ function BookingCard({
   const providerName = provider?.name ?? booking.provider_name
 
   return (
-    <article className="rounded-lg border border-[#dfe3e8] bg-white p-4 text-ink shadow-sm">
-      <div className="flex items-start justify-between gap-3">
+    <article className="flex h-full min-w-0 flex-col rounded-xl border border-[#dfe3e8] bg-white p-4 text-ink shadow-sm sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-mono text-xs font-semibold text-muted">{orderId(booking)}</p>
           <h3 className="mt-1 truncate text-base font-semibold">
@@ -566,12 +566,12 @@ function BookingCard({
           </h3>
           <p className="mt-0.5 font-mono text-xs text-muted">{phoneLabel(booking)}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(booking.status)}`}>
+        <span className={`w-fit shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(booking.status)}`}>
           {booking.status}
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
         <MiniField label="Service" value={serviceLabel(booking.service_type)} />
         <MiniField label="Date" value={dateLabel(booking)} />
         <MiniField label="Time" value={formatTime(booking.slot_time)} />
@@ -583,7 +583,7 @@ function BookingCard({
         <p className="mt-1 text-sm leading-5 text-ink">{booking.address ?? '-'}</p>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#edf0f4] pt-3">
+      <div className="mt-auto flex flex-col gap-3 border-t border-[#edf0f4] pt-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Provider</p>
           {provider && onProviderClick ? (
