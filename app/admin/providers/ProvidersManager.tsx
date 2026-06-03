@@ -155,7 +155,7 @@ export default function ProvidersManager({
     bookings.filter((b) => b.provider_id === id).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 sm:pb-0">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
           {providers.length} provider{providers.length === 1 ? '' : 's'} in the pool
@@ -167,11 +167,21 @@ export default function ProvidersManager({
         </p>
         <button
           onClick={startAdd}
-          className="rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-ink transition-transform hover:scale-[1.02]"
+          className="hidden rounded-full bg-saffron px-4 py-2 text-sm font-semibold text-ink transition-transform hover:scale-[1.02] sm:inline-flex"
         >
           + Add provider
         </button>
       </div>
+
+      {!formOpen && (
+        <button
+          type="button"
+          onClick={startAdd}
+          className="fixed bottom-5 right-5 z-40 inline-flex h-12 items-center justify-center rounded-full bg-saffron px-5 text-sm font-semibold text-ink shadow-xl shadow-black/20 transition-transform active:scale-95 sm:hidden"
+        >
+          + Provider
+        </button>
+      )}
 
       {formOpen && (
         <ProviderForm
@@ -363,11 +373,11 @@ function ProviderCalendar({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 bg-ink sm:flex sm:items-center sm:justify-center sm:bg-black/70 sm:p-4 sm:backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="max-h-[88vh] w-full max-w-5xl overflow-auto rounded-2xl border border-white/10 bg-ink p-6"
+        className="h-[100dvh] w-full overflow-y-auto bg-ink p-4 sm:h-auto sm:max-h-[88vh] sm:max-w-5xl sm:rounded-2xl sm:border sm:border-white/10 sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
@@ -410,7 +420,61 @@ function ProviderCalendar({
           </span>
         </div>
 
-        <div className="min-w-[640px]">
+        <div className="space-y-3 sm:hidden">
+          {WEEK.map((d) => {
+            const on = workingSet.has(d.day)
+            const isToday = d.day === todayWd
+            const bucket = byDay.get(d.day) ?? { positioned: [], unscheduled: [] }
+            const jobs = [...bucket.unscheduled, ...bucket.positioned]
+            return (
+              <section
+                key={d.day}
+                className={`rounded-xl border p-3 ${
+                  isToday
+                    ? 'border-saffron/45 bg-saffron/10'
+                    : on
+                      ? 'border-white/10 bg-ink-soft'
+                      : 'border-white/5 bg-white/[0.025]'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className={`font-semibold ${isToday ? 'text-saffron' : 'text-white'}`}>
+                      {d.full}
+                    </h4>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {on ? `${fmtHour(provider.start_time)} - ${fmtHour(provider.end_time)}` : 'Off'}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-muted">
+                    {jobs.length} job{jobs.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                {jobs.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {bucket.unscheduled.map((booking) => (
+                      <MobileCalendarJob key={booking.id} booking={booking} label="ASAP" />
+                    ))}
+                    {bucket.positioned.map((booking) => (
+                      <MobileCalendarJob
+                        key={booking.id}
+                        booking={booking}
+                        label={booking.slot_time ?? 'Scheduled'}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-3 rounded-lg border border-white/5 bg-white/[0.025] px-3 py-2 text-xs text-muted">
+                    No assigned jobs.
+                  </p>
+                )}
+              </section>
+            )
+          })}
+        </div>
+
+        <div className="hidden min-w-[640px] sm:block">
           {/* Day headers */}
           <div className="grid grid-cols-[44px_repeat(7,1fr)] gap-1">
             <div />
@@ -544,6 +608,24 @@ function ProviderCalendar({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function MobileCalendarJob({ booking, label }: { booking: Booking; label: string }) {
+  const service = booking.service_type
+  return (
+    <div className={`rounded-lg border px-3 py-2 text-xs ${jobStatusClass(booking.status)}`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-semibold">{label}</span>
+        <span className="rounded-full bg-black/20 px-2 py-0.5 text-[10px]">
+          {booking.status}
+        </span>
+      </div>
+      <p className="mt-1 text-white">
+        {service ? SERVICE_EMOJI[service] ?? '' : ''} {booking.user_name ?? 'Customer'}
+      </p>
+      <p className="mt-0.5 text-white/60">{booking.area ?? 'Area not set'}</p>
     </div>
   )
 }

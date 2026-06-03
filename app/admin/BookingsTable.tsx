@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { CalendarDays, CreditCard, Pencil, Search, X } from 'lucide-react'
 import type { Booking, Provider } from '@/lib/supabase'
@@ -125,6 +125,10 @@ function formatTimestamp(value: string | null | undefined) {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
   return d.toLocaleString()
+}
+
+function phoneLabel(booking: Booking) {
+  return booking.user_phone.replace(/^whatsapp:/, '')
 }
 
 function matchesProvider(provider: Provider, booking: Booking) {
@@ -405,7 +409,23 @@ export default function BookingsTable({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-[#dfe3e8] bg-white shadow-sm">
+      <div className="grid gap-3 lg:hidden">
+        {filteredRows.map((booking) => {
+          const provider = booking.provider_id ? providerById.get(booking.provider_id) : null
+          return (
+            <BookingCard
+              key={booking.id}
+              booking={booking}
+              provider={provider}
+              onProviderClick={provider ? () => setProviderModal(provider) : undefined}
+              onPaymentClick={() => setPaymentModal(booking)}
+              onReassign={() => openReassign(booking)}
+            />
+          )
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-md border border-[#dfe3e8] bg-white shadow-sm lg:block">
         <table className="w-full min-w-[1180px] text-sm">
           <thead className="bg-[#f3f5f8] text-left text-xs uppercase text-muted">
             <tr>
@@ -428,9 +448,7 @@ export default function BookingsTable({
                 <tr key={booking.id} className="border-t border-[#edf0f4] align-top text-ink">
                   <td className="px-4 py-3 font-mono text-xs text-ink">{orderId(booking)}</td>
                   <td className="px-4 py-3">{booking.user_name ?? '-'}</td>
-                  <td className="px-4 py-3 font-mono text-xs">
-                    {booking.user_phone.replace(/^whatsapp:/, '')}
-                  </td>
+                  <td className="px-4 py-3 font-mono text-xs">{phoneLabel(booking)}</td>
                   <td className="px-4 py-3">{serviceLabel(booking.service_type)}</td>
                   <td className="max-w-[260px] px-4 py-3 text-muted">
                     {booking.address ?? '-'}
@@ -523,6 +541,98 @@ export default function BookingsTable({
   )
 }
 
+function BookingCard({
+  booking,
+  provider,
+  onProviderClick,
+  onPaymentClick,
+  onReassign,
+}: {
+  booking: Booking
+  provider: Provider | null | undefined
+  onProviderClick?: () => void
+  onPaymentClick: () => void
+  onReassign: () => void
+}) {
+  const providerName = provider?.name ?? booking.provider_name
+
+  return (
+    <article className="rounded-lg border border-[#dfe3e8] bg-white p-4 text-ink shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-mono text-xs font-semibold text-muted">{orderId(booking)}</p>
+          <h3 className="mt-1 truncate text-base font-semibold">
+            {booking.user_name ?? 'Unnamed customer'}
+          </h3>
+          <p className="mt-0.5 font-mono text-xs text-muted">{phoneLabel(booking)}</p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(booking.status)}`}>
+          {booking.status}
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <MiniField label="Service" value={serviceLabel(booking.service_type)} />
+        <MiniField label="Date" value={dateLabel(booking)} />
+        <MiniField label="Time" value={formatTime(booking.slot_time)} />
+        <MiniField label="City" value={cityFor(booking) || booking.area || '-'} />
+      </div>
+
+      <div className="mt-3 rounded-md border border-[#edf0f4] bg-[#f8f9fb] p-3">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Address</p>
+        <p className="mt-1 text-sm leading-5 text-ink">{booking.address ?? '-'}</p>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#edf0f4] pt-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Provider</p>
+          {provider && onProviderClick ? (
+            <button
+              type="button"
+              onClick={onProviderClick}
+              className="mt-0.5 max-w-full truncate text-left text-sm font-semibold text-blue-700 underline-offset-4 hover:text-blue-900 hover:underline"
+            >
+              {provider.name}
+            </button>
+          ) : providerName ? (
+            <p className="mt-0.5 truncate text-sm font-medium">{providerName}</p>
+          ) : (
+            <p className="mt-0.5 text-sm italic text-muted">unassigned</p>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={onPaymentClick}
+            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${paymentClass(booking.payment_status)}`}
+          >
+            {booking.payment_status}
+          </button>
+          <button
+            type="button"
+            onClick={onReassign}
+            className="inline-flex size-9 items-center justify-center rounded-md border border-[#d8dde4] text-muted hover:border-ink hover:text-ink"
+            title="Reassign provider"
+            aria-label={`Reassign provider for ${orderId(booking)}`}
+          >
+            <Pencil className="size-4" />
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function MiniField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-[#edf0f4] bg-[#f8f9fb] px-3 py-2">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-1 min-w-0 truncate text-sm font-medium text-ink">{value}</p>
+    </div>
+  )
+}
+
 function ProviderModal({
   provider,
   bookings,
@@ -543,14 +653,15 @@ function ProviderModal({
   const today = new Date().toISOString().slice(0, 10)
   const todayBookings = bookings.filter((booking) => createdDate(booking) === today || booking.slot_date === 'today')
   const upcoming = groupBookings(bookings.filter((booking) => booking.status !== 'completed' && booking.status !== 'cancelled'))
+  const upcomingCount = upcoming.reduce((total, [, items]) => total + items.length, 0)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/55 p-3 sm:items-center sm:justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-white sm:flex sm:items-center sm:justify-center sm:bg-black/55 sm:p-3" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`${provider.name} details`}
-        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-md border border-[#dfe3e8] bg-white p-5 text-ink shadow-2xl"
+        className="h-[100dvh] w-full overflow-y-auto bg-white p-4 text-ink sm:h-auto sm:max-h-[92vh] sm:max-w-3xl sm:rounded-md sm:border sm:border-[#dfe3e8] sm:p-5 sm:shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <ModalHeader title={provider.name} subtitle={provider.profession ?? 'Provider'} onClose={onClose} />
@@ -577,7 +688,7 @@ function ProviderModal({
               <InfoRow label="Phone" value={provider.phone ?? '-'} />
               <InfoRow label="Services" value={provider.services.map(serviceLabel).join(', ') || '-'} />
               <InfoRow label="Areas" value={provider.areas.join(', ') || '-'} />
-              <InfoRow label="Rating" value={`${provider.rating.toFixed(1)} average`} />
+              <InfoRow label="Rating" value={<RatingBadge rating={provider.rating} />} />
             </dl>
           </section>
 
@@ -590,19 +701,34 @@ function ProviderModal({
               {provider.start_time} - {provider.end_time}
             </p>
 
-            <h3 className="mt-5 font-semibold text-ink">Ratings</h3>
-            <p className="mt-2 text-sm text-muted">All-time average: {provider.rating.toFixed(1)}</p>
-            <p className="text-sm text-muted">Last 5 ratings: no detailed rating rows yet.</p>
+            <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-semibold text-ink">Ratings</h3>
+                <RatingBadge rating={provider.rating} />
+              </div>
+              <p className="mt-2 text-sm text-[#7a5418]">All-time average from completed jobs.</p>
+              <p className="text-sm text-muted">Last 5 ratings: no detailed rating rows yet.</p>
+            </div>
           </section>
         </div>
 
         <section className="mt-4 rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
-          <h3 className="font-semibold text-ink">Today&apos;s Bookings</h3>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-semibold text-ink">Today&apos;s Bookings</h3>
+            <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-muted ring-1 ring-[#dfe3e8]">
+              {todayBookings.length}
+            </span>
+          </div>
           <BookingList bookings={todayBookings} empty="No bookings today." />
         </section>
 
         <section className="mt-4 rounded-md border border-[#dfe3e8] bg-[#f8f9fb] p-4">
-          <h3 className="font-semibold text-ink">Upcoming Bookings</h3>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-semibold text-ink">Upcoming Bookings</h3>
+            <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-muted ring-1 ring-[#dfe3e8]">
+              {upcomingCount}
+            </span>
+          </div>
           {upcoming.length === 0 ? (
             <p className="mt-2 text-sm text-muted">No upcoming bookings.</p>
           ) : (
@@ -757,7 +883,17 @@ function ModalHeader({
   )
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function RatingBadge({ rating }: { rating: number }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-[#8a4f0a] ring-1 ring-amber-200">
+      <span aria-hidden="true">★</span>
+      {rating.toFixed(1)}
+      <span className="font-medium text-[#8a4f0a]/75">avg</span>
+    </span>
+  )
+}
+
+function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] gap-3">
       <dt className="text-muted">{label}</dt>
@@ -771,9 +907,9 @@ function BookingList({ bookings, empty }: { bookings: Booking[]; empty: string }
     return empty ? <p className="mt-2 text-sm text-muted">{empty}</p> : null
   }
   return (
-    <ul className="mt-2 divide-y divide-[#dfe3e8]">
+    <ul className="mt-3 space-y-2">
       {bookings.map((booking) => (
-        <li key={booking.id} className="py-2 text-sm">
+        <li key={booking.id} className="rounded-md border border-[#dfe3e8] bg-white p-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-mono text-xs text-ink">{orderId(booking)}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(booking.status)}`}>

@@ -65,10 +65,10 @@ export default async function AdminPage() {
   return (
     <main className="min-h-screen bg-background px-3 py-6 sm:px-6">
       <div className="mx-auto max-w-[1900px] space-y-6">
-        <header className="flow-wash flex flex-wrap items-center justify-between gap-4 rounded-md px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-white/10 bg-ink px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
           <div>
             <h1 className="text-2xl font-semibold">DoneDanaDone - Bookings</h1>
-            <p className="text-sm text-white/70">
+            <p className="mt-1 max-w-xl text-sm leading-6 text-white/80">
               Live view of incoming WhatsApp bookings — providers auto-assigned.
             </p>
           </div>
@@ -84,7 +84,7 @@ export default async function AdminPage() {
                 Providers
               </Link>
             </nav>
-            <div className="flex items-center gap-2 text-xs text-white/70">
+            <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-2.5 py-1.5 text-xs text-white/80">
               <span className="size-2 rounded-full bg-green-500 animate-pulse" />
               realtime
             </div>
