@@ -409,7 +409,7 @@ export default function BookingsTable({
         )}
       </div>
 
-      <div className="grid gap-3 lg:hidden">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredRows.map((booking) => {
           const provider = booking.provider_id ? providerById.get(booking.provider_id) : null
           return (
@@ -425,7 +425,7 @@ export default function BookingsTable({
         })}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-md border border-[#dfe3e8] bg-white shadow-sm lg:block">
+      <div className="hidden overflow-x-auto rounded-md border border-[#dfe3e8] bg-white shadow-sm">
         <table className="w-full min-w-[1180px] text-sm">
           <thead className="bg-[#f3f5f8] text-left text-xs uppercase text-muted">
             <tr>
