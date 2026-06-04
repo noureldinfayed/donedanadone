@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { useScrollDirection } from '@/hooks/useScrollDirection'
 import { cn } from '@/lib/utils'
+import DoneDanaDoneLogo from '@/components/brand/DoneDanaDoneLogo'
 
 const SCROLL_THRESHOLD = 60 // px before navbar becomes opaque
 
-// ─── PLACEHOLDER DATA ─────────────────────────────────────────────────────
-// Replace with real nav links and logo component per project.
+// ─── NAV DATA ─────────────────────────────────────────────────────────────
 const NAV_LINKS = [
   { label: 'Home', href: '#' },
   { label: 'Services', href: '#services' },
@@ -56,16 +56,15 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
 
-            {/* ── LOGO SLOT ─────────────────────────────────────────────── */}
             <a
               href="/"
               className="flex items-center gap-2 flex-shrink-0"
               aria-label="Go to homepage"
             >
-              {/* Replace with <Image> logo or SVG component */}
-              <span className="font-display font-bold text-xl text-primary tracking-tight">
-                [LOGO]
-              </span>
+              <DoneDanaDoneLogo
+                markClassName="h-8 w-auto text-primary"
+                wordmarkClassName="font-display text-xl font-bold tracking-tight text-primary"
+              />
             </a>
 
             {/* ── DESKTOP NAV LINKS ─────────────────────────────────────── */}

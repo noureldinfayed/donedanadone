@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import DoneDanaDoneLogo from '@/components/brand/DoneDanaDoneLogo'
 
 // Sticky top navbar — turns slightly opaque once the user scrolls.
 export default function Navbar() {
@@ -30,10 +31,10 @@ export default function Navbar() {
             className="inline-flex items-center gap-3 text-white"
             onClick={() => setMenuOpen(false)}
           >
-            <span className="flex size-8 items-center justify-center rounded-full bg-white text-lg font-black text-ink">
-              D
-            </span>
-            <span className="font-display text-lg font-bold">DoneDanaDone</span>
+            <DoneDanaDoneLogo
+              markClassName="h-8 w-auto text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+              wordmarkClassName="font-display text-lg font-bold"
+            />
           </a>
 
           <nav className="hidden items-center gap-5 text-xs font-medium text-white/80 sm:flex">
