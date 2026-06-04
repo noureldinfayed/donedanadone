@@ -4,7 +4,10 @@ import { motion } from 'framer-motion'
 
 const CITIES = ['Delhi', 'Gurugram', 'Noida', 'Mumbai', 'Bangalore']
 
-const WHATSAPP_NUMBER = '919873510510'
+const WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919873510510').replace(
+  /\D/g,
+  ''
+)
 const QR_URL =
   `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://wa.me/${WHATSAPP_NUMBER}&bgcolor=ffffff&color=151515&margin=10`
 

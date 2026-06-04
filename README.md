@@ -23,6 +23,14 @@ cp .env.example .env.local
 
 Fill in Supabase, Meta WhatsApp Cloud API, Gemini, Razorpay, and admin credentials.
 
+Meta WhatsApp Cloud API requires:
+
+- `META_WHATSAPP_ACCESS_TOKEN`
+- `META_WHATSAPP_PHONE_NUMBER_ID`
+- `META_WHATSAPP_VERIFY_TOKEN`
+- `META_GRAPH_API_VERSION`
+- `NEXT_PUBLIC_WHATSAPP_NUMBER=919873510510`
+
 ### 2. Database
 
 Create a Supabase project, then run the SQL in [`supabase/schema.sql`](supabase/schema.sql). For an existing database, run the migration in [`supabase/migrations/20260531000000_customers_blacklist_provider_unavailability.sql`](supabase/migrations/20260531000000_customers_blacklist_provider_unavailability.sql).
@@ -163,6 +171,7 @@ app/
 lib/
   supabase.ts                      Server Supabase client and domain types
   state-machine.ts                 Customer and provider conversation flows
+  whatsapp.ts                      Meta WhatsApp Cloud API send/receive helpers
   match.ts                         Provider eligibility and assignment
   gemini.ts                        Intent and time parsing
   razorpay.ts                      Payment link and webhook signature helpers

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { verifyWebhookSignature } from '@/lib/razorpay'
 import { handlePaidBooking } from '@/lib/state-machine'
-import { sendWhatsApp } from '@/lib/twilio'
+import { sendWhatsApp } from '@/lib/whatsapp'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

@@ -11,7 +11,7 @@ import { parseIntent, parseUnavailableUntil } from './gemini'
 import { createPaymentLink } from './razorpay'
 import { autoAssignProvider } from './match'
 import type { Booking } from './supabase'
-import { sendWhatsApp } from './twilio'
+import { sendWhatsApp } from './whatsapp'
 import { normalizeWhatsAppAddress, samePhone } from './phone'
 
 // ─── Constants ───────────────────────────────────────────────────────────────

@@ -1,47 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handleIncomingMessage } from '@/lib/state-machine'
-import { sendWhatsApp } from '@/lib/twilio'
+import { extractIncomingWhatsAppMessages, sendWhatsApp } from '@/lib/whatsapp'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// ─── Twilio WhatsApp webhook ────────────────────────────────────────────────
-// Twilio sends incoming WhatsApp messages here as application/x-www-form-urlencoded.
-// We parse `From` (sender) and `Body` (message text), drive the state machine,
-// then push the reply out via the Twilio REST API (rather than using TwiML,
-// so the same code path is reused by the Razorpay webhook).
+// Meta verifies the webhook by sending hub.challenge to this URL.
+export async function GET(req: NextRequest) {
+  const params = req.nextUrl.searchParams
+  const mode = params.get('hub.mode')
+  const token = params.get('hub.verify_token')
+  const challenge = params.get('hub.challenge')
+
+  if (
+    mode === 'subscribe' &&
+    challenge &&
+    token &&
+    token === process.env.META_WHATSAPP_VERIFY_TOKEN
+  ) {
+    return new NextResponse(challenge, { status: 200 })
+  }
+
+  return new NextResponse('Forbidden', { status: 403 })
+}
+
+// Meta sends inbound WhatsApp message events as JSON. We parse supported user
+// replies, drive the state machine, then send responses through Cloud API.
 export async function POST(req: NextRequest) {
-  let from: string | null = null
-  let body: string | null = null
+  let messages: ReturnType<typeof extractIncomingWhatsAppMessages> = []
 
   try {
-    const form = await req.formData()
-    from = (form.get('From') as string | null) ?? null
-    body = (form.get('Body') as string | null) ?? null
+    const payload = await req.json()
+    messages = extractIncomingWhatsAppMessages(payload)
   } catch (err) {
-    console.error('[whatsapp] form parse failed', err)
+    console.error('[whatsapp] webhook parse failed', err)
   }
 
-  if (!from || !body) {
-    return new NextResponse('OK', { status: 200 })
+  if (messages.length === 0) {
+    return NextResponse.json({ received: true })
   }
 
-  let reply: string
-  try {
-    reply = await handleIncomingMessage(from, body)
-  } catch (err) {
-    console.error('[whatsapp] state machine failed', err)
-    reply =
-      "😕 Sorry, something went wrong. Type 'menu' to start over and we'll get you booked."
+  for (const message of messages) {
+    let reply: string
+    try {
+      reply = await handleIncomingMessage(message.from, message.body)
+    } catch (err) {
+      console.error('[whatsapp] state machine failed', err)
+      reply =
+        "😕 Sorry, something went wrong. Type 'menu' to start over and we'll get you booked."
+    }
+
+    // Acknowledge Meta webhooks even if sending fails; retries would replay the
+    // same inbound message through the state machine.
+    try {
+      await sendWhatsApp(message.from, reply)
+    } catch (err) {
+      console.error('[whatsapp] send failed', err)
+    }
   }
 
-  // Send reply via Twilio REST API. We swallow send errors so Twilio doesn't
-  // retry (which would re-drive the state machine for the same message).
-  try {
-    await sendWhatsApp(from, reply)
-  } catch (err) {
-    console.error('[whatsapp] send failed', err)
-  }
-
-  return new NextResponse('OK', { status: 200 })
+  return NextResponse.json({ received: true })
 }

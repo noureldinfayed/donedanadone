@@ -5,7 +5,7 @@ export function normalizeWhatsAppAddress(phone: string): string {
 }
 
 export function phoneIdentity(phone: string): string {
-  return normalizeWhatsAppAddress(phone).replace(/^whatsapp:/i, '')
+  return normalizeWhatsAppAddress(phone).replace(/^whatsapp:/i, '').replace(/\D/g, '')
 }
 
 export function samePhone(a: string | null | undefined, b: string | null | undefined) {

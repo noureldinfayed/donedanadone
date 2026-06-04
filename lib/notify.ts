@@ -1,11 +1,9 @@
 import type { Booking, Provider } from './supabase'
-import { sendWhatsApp } from './twilio'
+import { sendWhatsApp, whatsappEngineConfigured } from './whatsapp'
 
 // ─── Provider notification ────────────────────────────────────────────────────
-// The "ping the assigned provider" step of the automated flow. It is fully
-// built but GATED: until a verified WhatsApp Business number exists, sends are
-// switched off and we only log. Flip PROVIDER_NOTIFY_ENABLED=true (with the
-// Twilio creds set) to turn it on later — no code change needed.
+// The "ping the assigned provider" step of the automated flow. It is gated so
+// local development can run without live Meta WhatsApp credentials.
 
 const SERVICE_LABEL: Record<string, string> = {
   home_chef: 'Home Chef',
@@ -35,7 +33,7 @@ function buildJobMessage(provider: Provider, booking: Booking): string {
 }
 
 const notifyEnabled = () =>
-  process.env.PROVIDER_NOTIFY_ENABLED === 'true' && !!process.env.TWILIO_WHATSAPP_FROM
+  process.env.PROVIDER_NOTIFY_ENABLED === 'true' && whatsappEngineConfigured()
 
 /**
  * Notify a provider that they've been assigned a booking. Returns true if a
