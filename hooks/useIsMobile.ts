@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 const MOBILE_BREAKPOINT = 768 // px — matches Tailwind's `md` breakpoint
 
@@ -12,19 +12,24 @@ const MOBILE_BREAKPOINT = 768 // px — matches Tailwind's `md` breakpoint
  *   const isMobile = useIsMobile()
  */
 export function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false)
+  return useSyncExternalStore(subscribeToViewport, getMobileSnapshot, getServerSnapshot)
+}
 
-  useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+function mediaQuery() {
+  return `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+}
 
-    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+function getMobileSnapshot() {
+  return window.matchMedia(mediaQuery()).matches
+}
 
-    // Set initial value
-    setIsMobile(mql.matches)
+function getServerSnapshot() {
+  return false
+}
 
-    mql.addEventListener('change', onChange)
-    return () => mql.removeEventListener('change', onChange)
-  }, [])
+function subscribeToViewport(callback: () => void) {
+  const mql = window.matchMedia(mediaQuery())
 
-  return isMobile
+  mql.addEventListener('change', callback)
+  return () => mql.removeEventListener('change', callback)
 }

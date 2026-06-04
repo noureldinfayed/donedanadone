@@ -33,10 +33,7 @@ export default function AdminLogin() {
       onSubmit={submit}
       className="w-full max-w-sm rounded-md border border-[#dfe3e8] bg-white shadow-xl shadow-black/10"
     >
-      <div className="flow-wash flex h-16 items-center justify-between rounded-t-md px-5 text-white">
-        <span className="flex size-8 items-center justify-center rounded-full bg-white text-sm font-black text-ink">
-          D
-        </span>
+      <div className="flow-wash flex h-16 items-center justify-center rounded-t-md px-5 text-white">
         <span className="text-sm font-semibold">Admin</span>
       </div>
       <div className="space-y-4 p-6">

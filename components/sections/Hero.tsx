@@ -1,13 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { SERVICE_CITIES, WHATSAPP_NUMBER } from '@/lib/site'
 
-const CITIES = ['Delhi', 'Gurugram', 'Noida', 'Mumbai', 'Bangalore']
-
-const WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919873510510').replace(
-  /\D/g,
-  ''
-)
 const QR_URL =
   `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://wa.me/${WHATSAPP_NUMBER}&bgcolor=ffffff&color=151515&margin=10`
 
@@ -82,10 +77,10 @@ export default function Hero() {
                 </a>
 
                 <p className="text-center text-xs text-white/58 sm:text-left">
-                  {CITIES.map((c, i) => (
+                  {SERVICE_CITIES.map((c, i) => (
                     <span key={c}>
                       <span>{c}</span>
-                      {i < CITIES.length - 1 ? <span className="mx-1.5 text-white/25">/</span> : null}
+                      {i < SERVICE_CITIES.length - 1 ? <span className="mx-1.5 text-white/25">/</span> : null}
                     </span>
                   ))}
                 </p>

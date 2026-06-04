@@ -60,7 +60,7 @@ export default async function ProvidersPage() {
       <div className="mx-auto max-w-[1900px] space-y-6">
         <header className="flow-wash flex flex-wrap items-center justify-between gap-4 rounded-md px-5 py-5 text-white shadow-xl shadow-black/10 sm:px-7">
           <div>
-            <h1 className="text-2xl font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">DoneDanaDone - Providers</h1>
+            <h1 className="text-2xl font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]">Providers</h1>
             <p className="mt-1 max-w-xl text-sm font-medium leading-6 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
               Set up the professionals once - bookings are matched and assigned automatically.
             </p>

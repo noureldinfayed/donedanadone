@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Outfit, DM_Sans } from 'next/font/google'
+import { absoluteUrl, SERVICE_CITIES, SERVICE_TYPES, SITE_NAME, SITE_URL, WHATSAPP_NUMBER } from '@/lib/site'
 import './globals.css'
 
 const outfit = Outfit({
@@ -17,20 +18,65 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'DoneDanaDone — Book Home Services on WhatsApp in 30 Seconds',
+  title: {
+    default: 'DoneDanaDone - WhatsApp Home Services Booking in India',
+    template: `%s | ${SITE_NAME}`,
+  },
   description:
-    'Chat with our AI on WhatsApp to book Home Chefs, House Help, Electricians, and more across India. No app, no forms, no waiting.',
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || 'https://donedanadone.vercel.app'
-  ),
+    'Book home chefs, house help, electricians, plumbers, babysitters, and dog walkers on WhatsApp across Delhi, Gurugram, Noida, Mumbai, and Bangalore.',
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  keywords: [
+    'home services India',
+    'WhatsApp home services',
+    'book home chef India',
+    'house help booking India',
+    'electrician booking Delhi',
+    'plumber booking Gurugram',
+    'home services Noida',
+    'home services Mumbai',
+    'home services Bangalore',
+    ...SERVICE_CITIES.map((city) => `home services ${city}`),
+    ...SERVICE_TYPES.map((service) => `${service.toLowerCase()} booking India`),
+  ],
+  alternates: {
+    canonical: absoluteUrl('/'),
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    siteName: 'DoneDanaDone',
-    title: 'Book Home Services on WhatsApp in 30 Seconds',
-    description: 'Chef · House Help · Electrician · Plumber · Babysitter · Dog Walker',
+    url: absoluteUrl('/'),
+    siteName: SITE_NAME,
+    title: 'DoneDanaDone - WhatsApp Home Services Booking in India',
+    description:
+      'Book Home Chef, House Help, Electrician, Plumber, Babysitter, and Dog Walker services on WhatsApp in major Indian cities.',
   },
-  twitter: { card: 'summary_large_image' },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DoneDanaDone - WhatsApp Home Services Booking in India',
+    description: 'Book trusted home services on WhatsApp across Delhi NCR, Mumbai, and Bangalore.',
+  },
+  category: 'home services',
+  other: {
+    'geo.region': 'IN',
+    'geo.placename': 'India',
+    'geo.position': '28.4595;77.0266',
+    ICBM: '28.4595, 77.0266',
+    'business:contact_data:country_name': 'India',
+    'business:contact_data:phone_number': `+${WHATSAPP_NUMBER}`,
+    'og:country-name': 'India',
+  },
 }
 
 export default function RootLayout({

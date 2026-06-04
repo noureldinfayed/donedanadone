@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { useScrollDirection } from '@/hooks/useScrollDirection'
@@ -26,12 +27,6 @@ export default function Navbar() {
   // Hide on scroll down (after threshold), show on scroll up
   const isHidden = direction === 'down' && scrollY > SCROLL_THRESHOLD + 80
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [menuOpen])
-
   // Close menu on resize to desktop
   useEffect(() => {
     const onResize = () => {
@@ -56,7 +51,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
 
-            <a
+            <Link
               href="/"
               className="flex items-center gap-2 flex-shrink-0"
               aria-label="Go to homepage"
@@ -65,7 +60,7 @@ export default function Navbar() {
                 markClassName="h-8 w-auto text-primary"
                 wordmarkClassName="font-display text-xl font-bold tracking-tight text-primary"
               />
-            </a>
+            </Link>
 
             {/* ── DESKTOP NAV LINKS ─────────────────────────────────────── */}
             <nav
