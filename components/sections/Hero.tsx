@@ -4,11 +4,11 @@ import { motion } from 'framer-motion'
 
 const CITIES = ['Delhi', 'Gurugram', 'Noida', 'Mumbai', 'Bangalore']
 
-// External QR generator — phone number placeholder until the WhatsApp number is live.
+const WHATSAPP_NUMBER = '919873510510'
 const QR_URL =
-  'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://wa.me/+1234567890&bgcolor=ffffff&color=151515&margin=10'
+  `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://wa.me/${WHATSAPP_NUMBER}&bgcolor=ffffff&color=151515&margin=10`
 
-const WHATSAPP_LINK = 'https://wa.me/+1234567890'
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },

@@ -16,7 +16,7 @@ import { normalizeWhatsAppAddress, samePhone } from './phone'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const BOOKING_PRICE_INR = Number(process.env.BOOKING_PRICE_INR ?? 499)
-const SUPPORT_PHONE = '+91-98765-43210'
+const SUPPORT_PHONE = '+91 98735 10510'
 
 const SERVICE_LABEL: Record<ServiceType, string> = {
   home_chef: 'Home Chef',
