@@ -16,7 +16,6 @@ import { normalizeWhatsAppAddress, samePhone } from './phone'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const BOOKING_PRICE_INR = Number(process.env.BOOKING_PRICE_INR ?? 499)
-const SUPPORT_PHONE = '+91 98735 10510'
 
 const SERVICE_LABEL: Record<ServiceType, string> = {
   home_chef: 'Home Chef',
@@ -345,7 +344,7 @@ function customerConfirmedMessage(booking: Booking, provider: Provider | null): 
     `Date & Time: ${booking.slot_date ?? ''} ${booking.slot_time ?? ''}\n` +
     `Address: ${booking.address ?? ''}\n` +
     `${providerLine}\n\n` +
-    `For support: ${SUPPORT_PHONE}`
+    'Reply here if you need to change anything.'
   )
 }
 

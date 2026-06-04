@@ -26,10 +26,10 @@ Fill in Supabase, Meta WhatsApp Cloud API, Gemini, Razorpay, and admin credentia
 Meta WhatsApp Cloud API requires:
 
 - `META_WHATSAPP_ACCESS_TOKEN`
-- `META_WHATSAPP_PHONE_NUMBER_ID`
+- `META_WHATSAPP_PHONE_NUMBER_ID` for the `+919873510510` chatbot sender in Meta
 - `META_WHATSAPP_VERIFY_TOKEN`
 - `META_GRAPH_API_VERSION`
-- `NEXT_PUBLIC_WHATSAPP_NUMBER=919873510510`
+- `NEXT_PUBLIC_WHATSAPP_NUMBER=919873510510` for the public hero link and QR code
 
 ### 2. Database
 
