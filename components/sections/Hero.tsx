@@ -26,16 +26,15 @@ export default function Hero() {
 
           <div className="relative grid min-h-[620px] items-center gap-10 px-6 py-16 sm:px-10 lg:grid-cols-[1fr_360px] lg:px-14">
             <div className="max-w-3xl">
-              <motion.span
+              <motion.p
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
                 transition={{ duration: 0.6, delay: 0 }}
-                className="mx-auto mb-8 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white lg:mx-0"
+                className="mx-auto mb-8 text-center text-xs font-medium text-white/75 lg:mx-0 lg:text-left"
               >
-                <span className="size-1.5 rounded-full bg-whatsapp" />
                 AI booking workflow live in India
-              </motion.span>
+              </motion.p>
 
               <motion.h1
                 initial="hidden"
